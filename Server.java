@@ -62,6 +62,31 @@ public class Server implements RemoteInterface {
         } else {
             return "NOT_FOUND";
         }
-    } 
+    }
+
+    @Override
+    public void backup(String filepath, int replicationDeg) {
+
+    }
+
+    @Override
+    public void restore(String filepath) {
+
+    }
+
+    @Override
+    public void delete(String pathname) {
+
+    }
+
+    @Override
+    public void reclaim(int maxDiskSpace) {
+
+    }
+
+    @Override
+    public void state() {
+
+    }
 
 }
