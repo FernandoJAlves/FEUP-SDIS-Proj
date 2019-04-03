@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import static java.lang.Math.pow;
 
-public class message {
+public class Message {
 
     private static final char[] crlf = { 0xD, 0xA };
 

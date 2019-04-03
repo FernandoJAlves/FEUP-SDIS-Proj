@@ -6,37 +6,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * $ java Peer 1.0 1 8080 8081 8082
- * $ java Peer 1.0 2 8083 8084 8085
- * $ java Peer 1.0 3 8086 8087 8088
+ * $ java Peer 1.0 1 peer_1 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083
+ * $ java Peer 1.0 2 peer_2 224.0.0.4 8084 224.0.0.5 8085 224.0.0.6 8086
+ * $ java Peer 1.0 3 peer_3 224.0.0.7 8087 224.0.0.8 8088 224.0.0.9 8089
  */
 public class Peer implements RemoteInterface {
 
     private static ExecutorService threadpool;
     private static Channel mdc, mdb, mdr;
 
-    private String protocolVersion;
-    private int peerId;
+    private int id;
+    private String protocolVersion, accessPoint;
 
     public Peer(String[] args) {
         parseArguments(args);
-        this.threadpool = Executors.newFixedThreadPool(5);
+        threadpool = Executors.newFixedThreadPool(5);
         threadpool.execute(mdc);
         threadpool.execute(mdb);
         threadpool.execute(mdr);
     }
 
     public static void main(String args[]) {
-        if (args.length < 1 || args.length > 5) {
-            System.out.println("Usage: java Peer <protocol_version> <peer_id> <mdc_addr:mdc_port> <mdb_addr:mdb_port> <mdr_addr:mdr_port>");
+        if (args.length < 1 || args.length > 9) {
+            System.out.println("Usage: java Peer <protocol_version> <peer_id> <access_point> <mdc_addr> <mdc_port> <mdb_addr> <mdb_port> <mdr_addr> <mdr_port>");
             return;
         }
 
         try {
-            Peer sv = new Peer(args);
-            RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(sv,0);
+            Peer peer = new Peer(args);
+            RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(peer,0);
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind(args[1], stub);
+            registry.rebind(peer.accessPoint, stub);
             System.out.println("Peer ready to receive requests!");
         } catch(Exception e) {
             System.out.println("ERROR in main\n");
@@ -46,54 +46,16 @@ public class Peer implements RemoteInterface {
 
     void parseArguments(String args[]) {
         this.protocolVersion = args[0];
-        this.peerId = Integer.parseInt(args[1]);
-        
-        String[] addrPort;
-        String addr;
-        int port;
-
-        addr = "localhost";
-        addrPort = args[2].split(":");
-        if (addrPort.length > 1) {
-            addr = addrPort[0]; 
-            port = Integer.parseInt(addrPort[1]);    
-        } else {
-            port = Integer.parseInt(addrPort[0]); 
-        }               
-        this.mdc = new Channel(addr,port);
-
-        addr = "localhost";
-        addrPort = args[3].split(":");
-        if (addrPort.length > 1) {
-            addr = addrPort[0];   
-            port = Integer.parseInt(addrPort[1]);   
-        } else {
-            port = Integer.parseInt(addrPort[0]); 
-        }             
-        this.mdb = new Channel(addr,port);
-
-        addr = "localhost";
-        addrPort = args[4].split(":");
-        if (addrPort.length > 1) {
-            addr = addrPort[0]; 
-            port = Integer.parseInt(addrPort[1]);     
-        } else {
-            port = Integer.parseInt(addrPort[0]); 
-        }       
-        this.mdr = new Channel(addr,port);
+        this.id = Integer.parseInt(args[1]);
+        this.accessPoint = args[2];
+        mdc = new Channel(args[3],Integer.parseInt(args[4]));
+        mdb = new Channel(args[5],Integer.parseInt(args[6]));
+        mdr = new Channel(args[7],Integer.parseInt(args[8]));
     }
 
     //@Override
     public void backup(String filepath, int replicationDeg) {
-        File file = new File(filepath);
-
-        for(int i = 0; i < file.getChunkList().size(); i++){
-
-
-
-
-        }
-
+      
     }
 
     //@Override

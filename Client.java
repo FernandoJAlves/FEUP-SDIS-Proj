@@ -30,32 +30,33 @@ public class Client {
 
     public static void main(String args[]) {
 
-        if (args.length > 4) {
+        if (args.length > 5) {
             System.out.println(
-                    "ERROR: Usage should be 'java Client <remote_object_name> <sub_protocol> <oper_1> [<oper_2>]'");
+                    "ERROR: Usage should be 'java Client <host> <remote_object_name> <sub_protocol> <oper_1> [<oper_2>]'");
             return;
         }
 
         try {
-            String remotePeer = args[0];
-            String protocol = args[1];
+            String host = args[0];
+            String remotePeer = args[1];
+            String protocol = args[2];
 
             if (containsProtocol(protocol)) {
 
                 // Only create stub if protocol is valid
-                Registry registry = LocateRegistry.getRegistry("localhost");
+                Registry registry = LocateRegistry.getRegistry(host);
                 RemoteInterface stub = (RemoteInterface) registry.lookup(remotePeer);
 
                 switch (protocol) {
                 case "BACKUP": {
-                    if (args.length != 4) {
+                    if (args.length != 5) {
                         System.out.println("ERROR: Incorrect number of arguments in BACKUP");
                         return;
                     }
-                    String filePath = args[2];
+                    String filePath = args[3];
                     int repDeg;
-                    if(isNumber(args[3])){
-                        repDeg = Integer.parseInt(args[3]); // replication degree
+                    if(isNumber(args[4])){
+                        repDeg = Integer.parseInt(args[4]); // replication degree
                     }
                     else{
                         System.out.println("ERROR: Expected a number as <oper_2> of BACKUP");
@@ -67,34 +68,34 @@ public class Client {
                     break;
                 }
                 case "RESTORE": {
-                    if (args.length != 3) {
+                    if (args.length != 4) {
                         System.out.println("ERROR: Incorrect number of arguments in RESTORE");
                         return;
                     }
-                    String filePath = args[2];
+                    String filePath = args[3];
                     stub.restore(filePath);
                     System.out.println("RESTORE!");
                     break;
                 }
                 case "DELETE": {
-                    if (args.length != 3) {
+                    if (args.length != 4) {
                         System.out.println("ERROR: Incorrect number of arguments in DELETE");
                         return;
                     }
-                    String pathname = args[2];
+                    String pathname = args[3];
                     stub.delete(pathname);
                     System.out.println("DELETE!");
                     break;
                 }
                 case "RECLAIM": {
-                    if (args.length != 3) {
+                    if (args.length != 4) {
                         System.out.println("ERROR: Incorrect number of arguments in RECLAIM");
                         return;
                     }
 
                     int maxDiskSpace;
-                    if(isNumber(args[2])){
-                        maxDiskSpace = Integer.parseInt(args[2]); // replication degree
+                    if(isNumber(args[3])){
+                        maxDiskSpace = Integer.parseInt(args[3]); // replication degree
                     }
                     else{
                         System.out.println("ERROR: Expected a number as <oper_1> of RECLAIM");
@@ -106,7 +107,7 @@ public class Client {
                     break;
                 }
                 case "STATE": {
-                    if (args.length != 2) {
+                    if (args.length != 3) {
                         System.out.println("ERROR: Incorrect number of arguments in STATE");
                         return;
                     }
