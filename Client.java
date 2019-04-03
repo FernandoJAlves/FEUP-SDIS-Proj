@@ -19,6 +19,15 @@ public class Client {
         return false;
     }
 
+    public static boolean isNumber(String n) { 
+        try {  
+          Double.parseDouble(n);  
+          return true;
+        } catch(NumberFormatException e){  
+          return false;  
+        }  
+      }
+
     public static void main(String args[]) {
 
         if (args.length > 4) {
@@ -44,7 +53,15 @@ public class Client {
                         return;
                     }
                     String filePath = args[2];
-                    int repDeg = Integer.parseInt(args[3]); // replication degree
+                    int repDeg;
+                    if(isNumber(args[3])){
+                        repDeg = Integer.parseInt(args[3]); // replication degree
+                    }
+                    else{
+                        System.out.println("ERROR: Expected a number as <oper_2> of BACKUP");
+                        return;
+                    }
+                        
                     stub.backup(filePath, repDeg);
                     System.out.println("BACKUP!");
                     break;
@@ -74,7 +91,16 @@ public class Client {
                         System.out.println("ERROR: Incorrect number of arguments in RECLAIM");
                         return;
                     }
-                    int maxDiskSpace = Integer.parseInt(args[2]);
+
+                    int maxDiskSpace;
+                    if(isNumber(args[2])){
+                        maxDiskSpace = Integer.parseInt(args[2]); // replication degree
+                    }
+                    else{
+                        System.out.println("ERROR: Expected a number as <oper_1> of RECLAIM");
+                        return;
+                    }
+
                     stub.reclaim(maxDiskSpace);
                     System.out.println("RECLAIM!");
                     break;
