@@ -1,7 +1,6 @@
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,11 +14,13 @@ public class Peer implements RemoteInterface {
     private static ExecutorService threadpool;
     private static Channel mdc, mdb, mdr;
 
-    private int id;
+    private String id;
     private String protocolVersion, accessPoint;
+    private Storage localStorage;
 
     public Peer(String[] args) {
         parseArguments(args);
+        localStorage = new Storage();
         threadpool = Executors.newFixedThreadPool(5);
         threadpool.execute(mdc);
         threadpool.execute(mdb);
@@ -46,7 +47,7 @@ public class Peer implements RemoteInterface {
 
     void parseArguments(String args[]) {
         this.protocolVersion = args[0];
-        this.id = Integer.parseInt(args[1]);
+        this.id = args[1];
         this.accessPoint = args[2];
         mdc = new Channel(args[3],Integer.parseInt(args[4]));
         mdb = new Channel(args[5],Integer.parseInt(args[6]));
@@ -55,7 +56,10 @@ public class Peer implements RemoteInterface {
 
     //@Override
     public void backup(String filepath, int replicationDeg) {
-      
+        FileManager manager = new FileManager(filepath);
+        for (Chunk chunk : manager.getChunkList()) {
+            localStorage.saveChunk(this.id,chunk);
+        }
     }
 
     //@Override
@@ -75,10 +79,6 @@ public class Peer implements RemoteInterface {
 
     //@Override
     public void state() {
-        byte[] buf;
-        String s = "adoihasdoiashdiashdoiasdoaskdasdasidjasoidjaoidjajdoasijd";
-        buf = s.getBytes();
-        System.out.println(buf);
-        this.mdc.send(buf);
+
     }
 }

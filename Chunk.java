@@ -16,7 +16,7 @@ public class Chunk {
         return fileId;
     }
 
-    public int getChunkNum() {
+    public int getNum() {
         return chunkNum;
     }
 
@@ -32,7 +32,7 @@ public class Chunk {
         return desiredReplicationDgr;
     }
 
-    public String getChunkName() {
+    public String getName() {
         return fileId + "_" + chunkNum;
     }
 }
