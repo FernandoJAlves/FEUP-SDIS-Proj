@@ -1,19 +1,29 @@
-import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+/**
+ * $ java Peer 1.0 1 8080 8081 8082
+ * $ java Peer 1.0 2 8083 8084 8085
+ * $ java Peer 1.0 3 8086 8087 8088
+ */
 public class Peer implements RemoteInterface {
 
-    String protocolVersion;
-    int peerId;
+    private static ExecutorService threadpool;
+    private static Channel mdc, mdb, mdr;
 
-    private Channel mdc, mdb, mdr;
-    private static HashMap<String, String> database = new HashMap<>();
+    private String protocolVersion;
+    private int peerId;
 
     public Peer(String[] args) {
         parseArguments(args);
+        this.threadpool = Executors.newFixedThreadPool(5);
+        threadpool.execute(mdc);
+        threadpool.execute(mdb);
+        threadpool.execute(mdr);
     }
 
     public static void main(String args[]) {
@@ -103,11 +113,10 @@ public class Peer implements RemoteInterface {
 
     //@Override
     public void state() {
-        String s = "ola";
-        byte[] buf = s.getBytes(); 
+        byte[] buf;
+        String s = "adoihasdoiashdiashdoiasdoaskdasdasidjasoidjaoidjajdoasijd";
+        buf = s.getBytes();
         System.out.println(buf);
-        mdc.send(buf);
+        this.mdc.send(buf);
     }
-    
-
 }
