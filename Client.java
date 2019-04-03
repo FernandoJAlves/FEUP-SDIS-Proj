@@ -17,10 +17,10 @@ public class Client {
             
             switch (args.length) {
                 case 4:
-                    stub.lookup(args[3]);
+                    //stub.lookup(args[3]);
                     break;
                 case 5:
-                    stub.register(args[3],args[4]);
+                    //stub.register(args[3],args[4]);
                     break;
                 default:
                     break;

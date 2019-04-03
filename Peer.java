@@ -6,19 +6,24 @@ import java.util.HashMap;
 
 public class Peer implements RemoteInterface {
 
+    String protocolVersion;
+    int peerId;
+
+    private Channel mdc, mdb, mdr;
     private static HashMap<String, String> database = new HashMap<>();
 
-    public Peer() {}
+    public Peer(String[] args) {
+        parseArguments(args);
+    }
 
     public static void main(String args[]) {
-
-        if (args.length < 1) {
-            System.out.println("Usage: java Peer <remote_object_name>");
+        if (args.length < 1 || args.length > 5) {
+            System.out.println("Usage: java Peer <protocol_version> <peer_id> <mdc_addr:mdc_port> <mdb_addr:mdb_port> <mdr_addr:mdr_port>");
             return;
         }
 
         try {
-            Peer sv = new Peer();
+            Peer sv = new Peer(args);
             RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(sv,0);
             Registry registry = LocateRegistry.getRegistry();
             registry.bind(args[0], stub);
@@ -29,40 +34,37 @@ public class Peer implements RemoteInterface {
         }
     }
 
-    /**
-     * Registers plates in the car database
-     * 
-     * @param plate Car plate
-     * @param owner Car owner
-     */
-    public String register(String plate, String owner) {
-        System.out.println("Register ");
-        System.out.println(database);
-        if (!database.containsKey(plate)) {
-            database.put(plate, owner);
-            String ret = Integer.toString(database.size());
-            System.out.println(plate + " " + owner + " :: " + ret);
-            return ret;
-        } else {
-            return Integer.toString(-1);
-        }
-    }
+    void parseArguments(String args[]) {
+        this.protocolVersion = args[0];
+        this.peerId = Integer.parseInt(args[1]);
+        
+        String[] addrPort;
+        String addr;
+        int port;
 
-    /**
-     * Looks for plates in the car database
-     * 
-     * @param plate Car plate
-     * @return Car owner
-     */
-    public String lookup(String plate) {
-        System.out.println("Lookup ");
-        if (database.containsKey(plate)) {
-            String ret = database.get(plate).toString();
-            System.out.println(plate + " :: " + ret);
-            return ret;
-        } else {
-            return "NOT_FOUND";
+        addr = "localhost";
+        addrPort = args[2].split(":");
+        if (addrPort.length > 1) {
+            addr = addrPort[0];   
         }
+        port = Integer.parseInt(addrPort[1]);        
+        this.mdc = new Channel(addr,port);
+
+        addr = "localhost";
+        addrPort = args[3].split(":");
+        if (addrPort.length > 1) {
+            addr = addrPort[0];   
+        }
+        port = Integer.parseInt(addrPort[1]);        
+        this.mdb = new Channel(addr,port);
+
+        addr = "localhost";
+        addrPort = args[4].split(":");
+        if (addrPort.length > 1) {
+            addr = addrPort[0];   
+        }
+        port = Integer.parseInt(addrPort[1]);        
+        this.mdr = new Channel(addr,port);
     }
 
     //@Override
