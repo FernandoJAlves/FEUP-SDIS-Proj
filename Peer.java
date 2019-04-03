@@ -26,7 +26,7 @@ public class Peer implements RemoteInterface {
             Peer sv = new Peer(args);
             RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(sv,0);
             Registry registry = LocateRegistry.getRegistry();
-            registry.bind(args[0], stub);
+            registry.rebind(args[1], stub);
             System.out.println("Peer ready to receive requests!");
         } catch(Exception e) {
             System.out.println("ERROR in main\n");
@@ -45,25 +45,31 @@ public class Peer implements RemoteInterface {
         addr = "localhost";
         addrPort = args[2].split(":");
         if (addrPort.length > 1) {
-            addr = addrPort[0];   
-        }
-        port = Integer.parseInt(addrPort[1]);        
+            addr = addrPort[0]; 
+            port = Integer.parseInt(addrPort[1]);    
+        } else {
+            port = Integer.parseInt(addrPort[0]); 
+        }               
         this.mdc = new Channel(addr,port);
 
         addr = "localhost";
         addrPort = args[3].split(":");
         if (addrPort.length > 1) {
             addr = addrPort[0];   
-        }
-        port = Integer.parseInt(addrPort[1]);        
+            port = Integer.parseInt(addrPort[1]);   
+        } else {
+            port = Integer.parseInt(addrPort[0]); 
+        }             
         this.mdb = new Channel(addr,port);
 
         addr = "localhost";
         addrPort = args[4].split(":");
         if (addrPort.length > 1) {
-            addr = addrPort[0];   
-        }
-        port = Integer.parseInt(addrPort[1]);        
+            addr = addrPort[0]; 
+            port = Integer.parseInt(addrPort[1]);     
+        } else {
+            port = Integer.parseInt(addrPort[0]); 
+        }       
         this.mdr = new Channel(addr,port);
     }
 
@@ -89,7 +95,10 @@ public class Peer implements RemoteInterface {
 
     //@Override
     public void state() {
-
+        String s = "ola";
+        byte[] buf = s.getBytes(); 
+        System.out.println(buf);
+        mdc.send(buf);
     }
     
 

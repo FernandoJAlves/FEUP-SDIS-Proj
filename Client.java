@@ -37,17 +37,6 @@ public class Client {
         }
 
         try {
-<<<<<<< HEAD
-            Registry registry = LocateRegistry.getRegistry(args[0]);
-            RemoteInterface stub = (RemoteInterface) registry.lookup(args[1]);
-            
-            switch (args.length) {
-                case 4:
-                    //stub.lookup(args[3]);
-                    break;
-                case 5:
-                    //stub.register(args[3],args[4]);
-=======
             String remotePeer = args[0];
             String protocol = args[1];
 
@@ -85,7 +74,6 @@ public class Client {
                     String filePath = args[2];
                     stub.restore(filePath);
                     System.out.println("RESTORE!");
->>>>>>> refs/remotes/origin/master
                     break;
                 }
                 case "DELETE": {
