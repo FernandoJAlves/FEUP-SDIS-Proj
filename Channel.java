@@ -21,9 +21,9 @@ public class Channel implements Runnable {
     }
 
     public void send(byte[] msg) {
-        try {
-            DatagramSocket serviceSocket = new DatagramSocket(this.port, this.address);
-            DatagramPacket packet = new DatagramPacket(msg, msg.length);
+        try {            
+            DatagramSocket serviceSocket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(msg, msg.length, this.address, this.port);
             serviceSocket.send(packet);
             serviceSocket.close();
         } catch (SocketException e) {
@@ -39,11 +39,11 @@ public class Channel implements Runnable {
     public void run() {
         MulticastSocket multicastSocket;
         try {
-            multicastSocket = new MulticastSocket();
+            multicastSocket = new MulticastSocket(port);
             multicastSocket.setReuseAddress(true);
             multicastSocket.setLoopbackMode(false);
             multicastSocket.setTimeToLive(1);
-            // multicastSocket.joinGroup(address);
+            //multicastSocket.joinGroup(address);
 
             while (true) {
                 byte[] buf = new byte[256];
@@ -53,7 +53,7 @@ public class Channel implements Runnable {
                 multicastSocket.receive(packet);
                 System.out.println("Received packet!");
 
-                // send answer
+                // process request and send answer
                 // serviceSocket.send();
                 // System.out.println("Packet sent!");
             }
