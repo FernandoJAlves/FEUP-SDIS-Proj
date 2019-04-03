@@ -15,6 +15,10 @@ public class File {
         getChunks();
     }
 
+    public List<Chunk> getChunkList(){
+        return chunks;
+    }
+
     private void getChunks() {
         chunks = new ArrayList<Chunk>();
 

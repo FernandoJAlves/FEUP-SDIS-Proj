@@ -75,6 +75,14 @@ public class Peer implements RemoteInterface {
 
     //@Override
     public void backup(String filepath, int replicationDeg) {
+        File file = new File(filepath);
+
+        for(int i = 0; i < file.getChunkList().size(); i++){
+
+
+
+
+        }
 
     }
 
