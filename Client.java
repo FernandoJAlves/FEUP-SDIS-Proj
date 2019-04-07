@@ -30,9 +30,9 @@ public class Client {
 
     public static void main(String args[]) {
 
-        if (args.length < 4 || args.length > 5) {
+        if (args.length < 3 || args.length > 5) {
             System.out.println(
-                    "ERROR: Usage should be 'java Client <host> <remote_object_name> <sub_protocol> <oper_1> [<oper_2>]'");
+                    "ERROR: Usage should be 'java Client <host> <remote_object_name> <sub_protocol> [<oper_1> <oper_2>]'");
             return;
         }
 
