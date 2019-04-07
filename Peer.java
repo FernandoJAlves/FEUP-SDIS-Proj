@@ -14,7 +14,7 @@ public class Peer implements RemoteInterface {
     private static ExecutorService threadpool;
     private static Channel mdc, mdb, mdr;
 
-    private String id;
+    private static String id;
     private String protocolVersion, accessPoint;
     private Storage localStorage;
 
@@ -48,7 +48,7 @@ public class Peer implements RemoteInterface {
 
     void parseArguments(String args[]) {
         this.protocolVersion = args[0];
-        this.id = args[1];
+        this.id = args[1];  //TODO: Passar id para int e não string?
         this.accessPoint = args[2];
         mdc = new Channel(args[3], Integer.parseInt(args[4]));
         mdb = new Channel(args[5], Integer.parseInt(args[6]));
@@ -58,34 +58,38 @@ public class Peer implements RemoteInterface {
     public static Channel getChannel(String channel) {
         //TODO: Remove prints, just for testing
         if (channel == "MDC"){
-            System.out.println("Got MDC");
+            //System.out.println("Got MDC");
             return mdc;
         }
             
         if (channel == "MDB"){
-            System.out.println("Got MDB");
+            //System.out.println("Got MDB");
             return mdb;
         }
             
         if (channel == "MDR"){
-            System.out.println("Got MDB");
+            //System.out.println("Got MDR");
             return mdr;
         }
             
         // default
+        System.out.println("ERROR: Reached default in getChannel");
         return mdc;
     }
+
+    public static ExecutorService getThreadPool(){
+        return threadpool;
+    }
+
+    public static int getId(){
+        return Integer.parseInt(id);
+    }
+
+
 
     // @Override
     public void backup(String filepath, int replicationDeg) {
         // FileManager manager = new FileManager(filepath);
-        String header = Message.mes_putchunk(protocolVersion, id, 1, 2, replicationDeg);
-        System.out.println("Sent: " + header);
-
-        MessageSender sender = new MessageSender("MDB",header.getBytes());
-
-        threadpool.execute(sender);
-
         /*
          * for (Chunk chunk : manager.getChunkList()) {
          * //localStorage.saveChunk(this.id,chunk);
@@ -95,6 +99,15 @@ public class Peer implements RemoteInterface {
          * 
          * }
          */
+
+        String header = Message.mes_putchunk(protocolVersion, id, 1, 2, replicationDeg);
+        System.out.println("Sent: " + header);
+
+        MessageSender sender = new MessageSender("MDB",header.getBytes()); //Send message through MDB
+
+        threadpool.execute(sender);
+
+
     }
 
     // @Override

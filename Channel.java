@@ -51,7 +51,8 @@ public class Channel implements Runnable {
 
                 // receive request
                 multicastSocket.receive(packet);
-                System.out.println("Received packet!");
+                
+                Peer.getThreadPool().execute(new MessageHandler(buf));
 
                 // process request and send answer
                 // serviceSocket.send();
