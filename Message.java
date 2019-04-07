@@ -23,7 +23,7 @@ public class Message {
         return false;
     }
 
-    //TODO: See if there is a better way of doing this
+    // TODO: See if there is a better way of doing this
     public static byte[] encodeSHA256(String toEncode) {
         byte[] encodedString = {};
         try {
@@ -35,12 +35,13 @@ public class Message {
         return encodedString;
     }
 
-    //Function from: https://www.baeldung.com/sha-256-hashing-java
+    // Function from: https://www.baeldung.com/sha-256-hashing-java
     public static String bytesToHex(byte[] bytes) {
         StringBuffer hexString = new StringBuffer();
         for (int i = 0; i < bytes.length; i++) {
-        String hex = Integer.toHexString(0xff & bytes[i]);
-        if(hex.length() == 1) hexString.append('0');
+            String hex = Integer.toHexString(0xff & bytes[i]);
+            if (hex.length() == 1)
+                hexString.append('0');
             hexString.append(hex);
         }
         return hexString.toString();
@@ -50,16 +51,12 @@ public class Message {
 
         // Example: java message STORED 1.0 8000 333 999999 7
 
-
         // <MessageType> <Version> <SenderId> <FileId>
         // <ChunkNo> <ReplicationDeg> <CRLF>
-/*
-        String messageType = "CHUNK";
-        String version = "1.0";
-        int senderId = 8000;
-        int fileId = 333;
-        int chunkNo = 3;
-        int replicationDeg = 3;*/
+        /*
+         * String messageType = "CHUNK"; String version = "1.0"; int senderId = 8000;
+         * int fileId = 333; int chunkNo = 3; int replicationDeg = 3;
+         */
 
         String messageType = args[0];
         String version = args[1];
@@ -95,27 +92,24 @@ public class Message {
             System.out.println("Invalid Sender ID");
             return;
         }
-        //FileId
+        // FileId
         String finalHashedFileId = bytesToHex(encodeSHA256(String.valueOf(fileId)));
 
-        //ChunkNo
-        if(chunkNo < pow(10,6)){
+        // ChunkNo
+        if (chunkNo < pow(10, 6)) {
             finalChunkNo = ("" + chunkNo).toCharArray();
-        }
-        else{
+        } else {
             System.out.println("Chunk Number was too large");
             return;
         }
 
-        //Replication Degree
-        if(replicationDeg < 10){
+        // Replication Degree
+        if (replicationDeg < 10) {
             finalRepDeg = ("" + replicationDeg).toCharArray();
-        }
-        else{
+        } else {
             System.out.println("Replication Degree was to large");
             return;
         }
-
 
         String size = "   Size: ";
 
@@ -132,6 +126,28 @@ public class Message {
         System.out.print(finalRepDeg);
         System.out.println(size + finalRepDeg.length);
 
+    }
+
+    public Message() {
+    }
+
+    // <MessageType> <Version> <SenderId> <FileId>
+    // <ChunkNo> <ReplicationDeg> <CRLF>
+
+    public static String mes_putchunk(String version, String id, int fileId, int chunkNo, int repDeg) {
+        //TODO: check all of the input values
+        
+        String finalVersion;
+        String finalId;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        String ret = "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " "
+                + repDeg + "\r\n\r\n";
+        return ret;
     }
 
 }

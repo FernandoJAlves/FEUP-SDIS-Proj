@@ -43,7 +43,7 @@ public class Channel implements Runnable {
             multicastSocket.setReuseAddress(true);
             multicastSocket.setLoopbackMode(false);
             multicastSocket.setTimeToLive(1);
-            //multicastSocket.joinGroup(address);
+            multicastSocket.joinGroup(address);
 
             while (true) {
                 byte[] buf = new byte[256];
