@@ -25,6 +25,7 @@ public class Channel implements Runnable {
             DatagramSocket serviceSocket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(msg, msg.length, this.address, this.port);
             serviceSocket.send(packet);
+            System.out.println("Packet sent!");
             serviceSocket.close();
         } catch (SocketException e) {
             // TODO Auto-generated catch block
@@ -46,17 +47,14 @@ public class Channel implements Runnable {
             multicastSocket.joinGroup(address);
 
             while (true) {
-                byte[] buf = new byte[256];
+                byte[] buf = new byte[65000];
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
                 // receive request
                 multicastSocket.receive(packet);
-                
+    
+                // process request
                 Peer.getThreadPool().execute(new MessageHandler(buf));
-
-                // process request and send answer
-                // serviceSocket.send();
-                // System.out.println("Packet sent!");
             }
         } catch (IOException e) {
             // TODO Auto-generated catch block

@@ -61,8 +61,7 @@ public class Client {
                     else{
                         System.out.println("ERROR: Expected a number as <oper_2> of BACKUP");
                         return;
-                    }
-                        
+                    }                    
                     stub.backup(filePath, repDeg);
                     System.out.println("BACKUP!");
                     break;

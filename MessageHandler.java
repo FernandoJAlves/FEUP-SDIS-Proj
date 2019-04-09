@@ -1,8 +1,10 @@
 public class MessageHandler implements Runnable {
-    private byte[] message;
+    private String message;
+    private String[] args;
 
     public MessageHandler(byte[] message) {
-        this.message = message;
+        this.message = new String(message, 0, message.length);
+        this.args = makeArrayArgs(this.message);
     }
 
     public String[] makeArrayArgs(String m) {
@@ -10,15 +12,17 @@ public class MessageHandler implements Runnable {
         return aux.split(" ");
     }
 
-    public void run() {
-        String messageString = new String(this.message, 0, this.message.length);
-        String[] arrayArgs = makeArrayArgs(messageString);
+    public String[] splitHeaderBody(String m) {
+        String aux = m.trim();
+        return aux.split("\r\n\r\n");
+    }
 
-        if (Integer.parseInt(arrayArgs[2]) == Peer.getId()) { // To ignore own messages
+    public void run() {
+        if (this.args[2].equals(Peer.getId())) { // To ignore own messages
             return;
         }
 
-        switch (arrayArgs[0]) {
+        switch (this.args[0]) {
         case "PUTCHUNK":
             handlePutChunk();
             return;
@@ -42,14 +46,24 @@ public class MessageHandler implements Runnable {
             System.out.println("ERROR: Entered MessageHandler Switch Default");
             break;
         }
-
     }
 
     // PUTCHUNK, STORED, GETCHUNK, CHUNK, DELETE, REMOVED
     private void handlePutChunk() {
         System.out.println("Received Putchunk!");
-        // TODO: Storage logic
 
+        // retrieve local storage
+        Storage storage = Peer.getLocalStorage();
+
+        String[] headerBody = splitHeaderBody(this.message);
+        String fileId = this.args[3];
+        int chunkNum = Integer.parseInt(this.args[4]);
+        byte[] data = headerBody[1].getBytes();
+        int desiredRepDgr = Integer.parseInt(this.args[4]);
+        
+        Chunk chunk = new Chunk(fileId, chunkNum, data, desiredRepDgr);
+        storage.saveChunk(chunk);
+        
         // TODO: No final, comunicar um STORED se der store
     }
 
