@@ -26,14 +26,17 @@ public class Storage {
         return availableSpace;
     }
 
-    public Chunk getChunk(String fileId, int chunkNum) {
-        String chunkName = fileId + "_" + chunkNum;
+    public Chunk getChunk(String name) {
         for (Chunk chunk : storedChunks) {
-            if (chunk.getName() == chunkName) {
+            if (chunk.getName() == name) {
                 return chunk;
             }
         }
         return null;
+    }
+
+    public Chunk getChunk(String fileId, int chunkNum) {
+        return getChunk(fileId + "_" + chunkNum);
     }
 
     public boolean isFileOwner(String fileId) {
@@ -46,7 +49,7 @@ public class Storage {
     }
 
     // thread-safe method
-    public synchronized void saveChunk(String peerId, Chunk chunk) {
+    public synchronized void saveChunk(Chunk chunk) {
         String chunkName = chunk.getName();
         int chunkSize = chunk.getData().length;
 
@@ -55,31 +58,34 @@ public class Storage {
             System.out.println("ERROR: localStorage is full!");
             return;
         }
-        // if file owner do not store chunk
-        if (isFileOwner(chunk.getFileId()))
-            return;
+        // if chunk file owner or chunk already stored, do not store chunk
+        if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) return;
 
         // check current replication degree and store chunk
         if (replicationHashmap.containsKey(chunkName)) {
-            if (replicationHashmap.get(chunkName) < chunk.getDesiredReplicationDgr()) {
+            /*if (replicationHashmap.get(chunkName) < chunk.getDesiredReplicationDgr()) {
                 storedChunks.add(chunk);
                 replicationHashmap.put(chunkName, replicationHashmap.get(chunkName) + 1);
             } else {
                 System.out.println("WARNING: max replication degree already reached!");
                 return;
-            }
+            }*/
+            storedChunks.add(chunk);
+            replicationHashmap.put(chunkName, replicationHashmap.get(chunkName) + 1);
         } else {
             storedChunks.add(chunk);
             replicationHashmap.put(chunkName, 1);
         }
 
         // create chunk file on peer directory
-        File dir = new File(peerId);
+        String fileDir = Peer.getId() + "/" + chunk.getFileId();
+        
+        File dir = new File(fileDir);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        String filepath = peerId + "/" + chunkName;
+        String filepath = fileDir + "/" + chunkName;
         File file = new File(filepath);
         if (!file.exists()) {
             try {

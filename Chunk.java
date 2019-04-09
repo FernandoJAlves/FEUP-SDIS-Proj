@@ -2,14 +2,20 @@ public class Chunk {
     
     private String fileId;
     private int chunkNum;
-    private int replicationDgr;
-    private int desiredReplicationDgr;
+    private int repDgr;
+    private int desiredRepDgr;
     private byte[] data;
 
     public Chunk(String fileId, int chunkNum, byte[] data) {
+        this(fileId,chunkNum,data,-1);
+    }
+
+    public Chunk(String fileId, int chunkNum, byte[] data, int desiredRepDgr) {
         this.fileId = fileId;
         this.chunkNum = chunkNum;
         this.data = data;
+        this.repDgr = -1;
+        this.desiredRepDgr = desiredRepDgr; 
     }
 
     public String getFileId() {
@@ -24,12 +30,12 @@ public class Chunk {
         return data;
     }
 
-    public int getReplicationDgr() {
-        return replicationDgr;
+    public int getRepDgr() {
+        return repDgr;
     }
 
-    public int getDesiredReplicationDgr() {
-        return desiredReplicationDgr;
+    public int getDesiredRepDgr() {
+        return desiredRepDgr;
     }
 
     public String getName() {

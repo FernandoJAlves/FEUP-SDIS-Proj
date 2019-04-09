@@ -13,15 +13,13 @@ public class Peer implements RemoteInterface {
 
     private static ExecutorService threadpool;
     private static Channel mdc, mdb, mdr;
-
-    private static String id;
-    private String protocolVersion, accessPoint;
-    private Storage localStorage;
+    private static Storage localStorage;
+    private static String protocolVersion, id, accessPoint;
 
     public Peer(String[] args) {
         parseArguments(args);
         localStorage = new Storage();
-        threadpool = Executors.newFixedThreadPool(5);
+        threadpool = Executors.newFixedThreadPool(100);
         threadpool.execute(mdc);
         threadpool.execute(mdb);
         threadpool.execute(mdr);
@@ -38,7 +36,7 @@ public class Peer implements RemoteInterface {
             Peer peer = new Peer(args);
             RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(peer, 0);
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind(peer.accessPoint, stub);
+            registry.rebind(accessPoint, stub);
             System.out.println("Peer ready to receive requests!");
         } catch (Exception e) {
             System.out.println("ERROR in main\n");
@@ -47,9 +45,9 @@ public class Peer implements RemoteInterface {
     }
 
     void parseArguments(String args[]) {
-        this.protocolVersion = args[0];
-        this.id = args[1];  //TODO: Passar id para int e não string?
-        this.accessPoint = args[2];
+        protocolVersion = args[0];
+        id = args[1];
+        accessPoint = args[2];
         mdc = new Channel(args[3], Integer.parseInt(args[4]));
         mdb = new Channel(args[5], Integer.parseInt(args[6]));
         mdr = new Channel(args[7], Integer.parseInt(args[8]));
@@ -81,33 +79,25 @@ public class Peer implements RemoteInterface {
         return threadpool;
     }
 
-    public static int getId(){
-        return Integer.parseInt(id);
+    public static String getId(){
+        return id;
     }
 
-
+    public static Storage getLocalStorage() {
+        return localStorage;
+    }
 
     // @Override
     public void backup(String filepath, int replicationDeg) {
-        // FileManager manager = new FileManager(filepath);
-        /*
-         * for (Chunk chunk : manager.getChunkList()) {
-         * //localStorage.saveChunk(this.id,chunk);
-         * 
-         * 
-         * 
-         * 
-         * }
-         */
+        FileManager manager = new FileManager(filepath);
 
-        String header = Message.mes_putchunk(protocolVersion, id, 1, 2, replicationDeg);
-        System.out.println("Sent: " + header);
-
-        MessageSender sender = new MessageSender("MDB",header.getBytes()); //Send message through MDB
-
-        threadpool.execute(sender);
-
-
+        for (Chunk chunk : manager.getChunkList()) {
+            System.out.println("Iterating");
+            String header = Message.mes_putchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum(), replicationDeg);
+            String message = Message.mes_addBody(header, chunk.getData());
+            MessageSender sender = new MessageSender("MDB",message.getBytes()); //send message through MDB
+            threadpool.execute(sender);
+        }
     }
 
     // @Override

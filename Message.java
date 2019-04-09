@@ -61,7 +61,7 @@ public class Message {
         String messageType = args[0];
         String version = args[1];
         int senderId = Integer.parseInt(args[2]);
-        int fileId = Integer.parseInt(args[3]);
+        String fileId = args[3];
         int chunkNo = Integer.parseInt(args[4]);
         int replicationDeg = Integer.parseInt(args[5]);
 
@@ -131,12 +131,10 @@ public class Message {
     public Message() {
     }
 
-    // <MessageType> <Version> <SenderId> <FileId>
-    // <ChunkNo> <ReplicationDeg> <CRLF>
-
-    public static String mes_putchunk(String version, String id, int fileId, int chunkNo, int repDeg) {
+    // <MessageType> <Version> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
+    public static String mes_putchunk(String version, String id, String fileId, int chunkNo, int repDeg) {
         //TODO: check all of the input values
-        
+    
         String finalVersion;
         String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
@@ -150,4 +148,7 @@ public class Message {
         return ret;
     }
 
+    public static String mes_addBody(String message, byte[] body) {
+        return message + body.toString();
+    }
 }
