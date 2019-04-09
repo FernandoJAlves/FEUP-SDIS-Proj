@@ -2,11 +2,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FileManager {
@@ -14,9 +11,9 @@ public class FileManager {
     private String pathname;
     private List<Chunk> chunks;
 
-    public FileManager(String pathname) {
+    public FileManager(String pathname, int repDgr) {
         this.pathname = pathname;
-        getChunks();
+        getChunks(repDgr);
     }
 
     public String getPathname() {
@@ -27,10 +24,10 @@ public class FileManager {
         return chunks;
     }
 
-    private void getChunks() {
+    private void getChunks(int repDgr) {
         chunks = new ArrayList<Chunk>();
 
-        int maxChunkSize = 64 * 1024; // 64KB per Chunk
+        int maxChunkSize = 64000; // 64KB per Chunk
 
         File file = new File(pathname);
         try (FileInputStream fileStream = new FileInputStream(file)) {
@@ -40,34 +37,20 @@ public class FileManager {
             int readBytes, chunkNum = 1;
             while ((readBytes = bufStream.read(buf)) != -1) {
                 if (readBytes == maxChunkSize) {
-                    chunks.add(new Chunk(pathname, chunkNum, buf));
+                    chunks.add(new Chunk(pathname, chunkNum, buf, repDgr));
                 } else {
                     byte[] auxBuf = Arrays.copyOf(buf, readBytes);
-                    chunks.add(new Chunk(pathname, chunkNum, auxBuf));
+                    chunks.add(new Chunk(pathname, chunkNum, auxBuf, repDgr));
                 }
                 chunkNum++;
                 buf = new byte[maxChunkSize];
             }
             if (file.length() % maxChunkSize == 0) {
-                chunks.add(new Chunk(pathname, chunkNum, null));
+                chunks.add(new Chunk(pathname, chunkNum, null, repDgr));
             }
             bufStream.close();
 
             fileStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void writeChunks() {
-        try {
-            for (Chunk chunk : chunks) {
-                FileOutputStream fileStream = new FileOutputStream(chunk.getName());
-                BufferedOutputStream stream = new BufferedOutputStream(fileStream);
-                stream.write(chunk.getData());
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

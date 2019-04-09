@@ -143,12 +143,25 @@ public class Message {
             return "ERROR";
         }
 
-        String ret = "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " "
-                + repDeg + "\r\n\r\n";
-        return ret;
+        return "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " " + repDeg + "\r\n\r\n";
     }
 
     public static String mes_addBody(String message, byte[] body) {
-        return message + body.toString();
+        return message + new String(body, 0, body.length);
+    }
+
+    // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+    public static String mes_stored(String version, String id, String fileId, int chunkNo) {
+        //TODO: check all of the input values
+    
+        String finalVersion;
+        String finalId;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "STORED " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + "\r\n\r\n";
     }
 }

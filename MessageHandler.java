@@ -1,3 +1,4 @@
+
 public class MessageHandler implements Runnable {
     private String message;
     private String[] args;
@@ -59,15 +60,21 @@ public class MessageHandler implements Runnable {
         String fileId = this.args[3];
         int chunkNum = Integer.parseInt(this.args[4]);
         byte[] data = headerBody[1].getBytes();
+        System.out.println(this.message);
         int desiredRepDgr = Integer.parseInt(this.args[4]);
         
         Chunk chunk = new Chunk(fileId, chunkNum, data, desiredRepDgr);
-        storage.saveChunk(chunk);
         
-        // TODO: No final, comunicar um STORED se der store
+        if (storage.saveChunk(chunk)) {
+            // send stored message
+            String storedMsg = Message.mes_stored(this.args[1], this.args[2], this.args[3], Integer.parseInt(this.args[4]));
+            MessageSender sender = new MessageSender("MC",storedMsg.getBytes()); //send message through MC
+            Peer.getThreadPool().execute(sender);
+        }
     }
 
     private void handleStored() {
+        System.out.println("Received Stored!");
         // TODO: Storage logic
     }
 
@@ -79,7 +86,7 @@ public class MessageHandler implements Runnable {
     }
 
     private void handleChunk() {
-        System.out.println("Received Chunk!");
+        // TODO: Storage logic
     }
 
     private void handleDelete() {

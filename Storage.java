@@ -15,7 +15,7 @@ public class Storage {
         ownedFiles = new ArrayList<FileManager>();
         storedChunks = new ArrayList<Chunk>();
         replicationHashmap = new ConcurrentHashMap<String, Integer>();
-        availableSpace = 100000; // 100 MB
+        availableSpace = 100000000; // 100 MB
     }
 
     public ArrayList<Chunk> getStoredChunks() {
@@ -28,7 +28,7 @@ public class Storage {
 
     public Chunk getChunk(String name) {
         for (Chunk chunk : storedChunks) {
-            if (chunk.getName() == name) {
+            if (chunk.getName().equals(name)) {
                 return chunk;
             }
         }
@@ -49,17 +49,20 @@ public class Storage {
     }
 
     // thread-safe method
-    public synchronized void saveChunk(Chunk chunk) {
+    public synchronized boolean saveChunk(Chunk chunk) {
         String chunkName = chunk.getName();
         int chunkSize = chunk.getData().length;
 
         // check available storage
         if (availableSpace < chunkSize) {
             System.out.println("ERROR: localStorage is full!");
-            return;
+            return false;
         }
+        
         // if chunk file owner or chunk already stored, do not store chunk
-        if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) return;
+        if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) {
+            return true;
+        }
 
         // check current replication degree and store chunk
         if (replicationHashmap.containsKey(chunkName)) {
@@ -77,29 +80,13 @@ public class Storage {
             replicationHashmap.put(chunkName, 1);
         }
 
-        // create chunk file on peer directory
-        String fileDir = Peer.getId() + "/" + chunk.getFileId();
-        
-        File dir = new File(fileDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        String filepath = fileDir + "/" + chunkName;
-        File file = new File(filepath);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-                FileOutputStream stream = new FileOutputStream(filepath);
-                stream.write(chunk.getData());
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+        // store locally
+        chunk.write();
 
         // decrease peer available space
         availableSpace -= chunk.getData().length;
+
+        return true;
     }
 
     public void deleteChunks(String peerId, String fileId) {
