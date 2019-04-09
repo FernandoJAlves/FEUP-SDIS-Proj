@@ -65,7 +65,7 @@ public class MessageHandler implements Runnable {
     }
 
     private void handleChunk() {
-        // TODO: Storage logic
+        System.out.println("Received Chunk!");
     }
 
     private void handleDelete() {
