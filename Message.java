@@ -109,8 +109,8 @@ public class Message {
 
     // <MessageType> <Version> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
     public static String mes_putchunk(String version, String id, String fileId, int chunkNo, int repDeg) {
-        //TODO: check all of the input values
-    
+        // TODO: check all of the input values
+
         String finalVersion;
         String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
@@ -119,7 +119,8 @@ public class Message {
             return "ERROR";
         }
 
-        return "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " " + repDeg + "\r\n\r\n";
+        return "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " " + repDeg
+                + "\r\n\r\n";
     }
 
     public static String mes_addBody(String message, byte[] body) {
@@ -128,8 +129,8 @@ public class Message {
 
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
     public static String mes_stored(String version, String id, String fileId, int chunkNo) {
-        //TODO: check all of the input values
-    
+        // TODO: check all of the input values
+
         String finalVersion;
         String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
@@ -139,5 +140,29 @@ public class Message {
         }
 
         return "STORED " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + "\r\n\r\n";
+    }
+
+    // GETCHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+    public static String mes_getchunk(String version, String senderId, String fileId, String chunkNo) {
+
+        return "GETCHUNK";
+    }
+
+    // CHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF><Body>
+    public static String mes_chunk(String version, String senderId, String fileId, String chunkNo, String body) {
+
+        return "CHUNK";
+    }
+
+    // DELETE <Version> <SenderId> <FileId> <CRLF><CRLF>
+    public static String mes_delete(String version, String senderId, String fileId) {
+
+        return "DELETE";
+    }
+
+    // REMOVED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+    public static String mes_removed(String version, String senderId, String fileId, String chunkNo) {
+
+        return "REMOVED";
     }
 }
