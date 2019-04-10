@@ -1,21 +1,23 @@
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Storage {
 
-    private ArrayList<FileManager> ownedFiles;
+    private ArrayList<FileManager> localFiles;
     private ArrayList<Chunk> storedChunks;
     private ConcurrentHashMap<String, Integer> replicationHashmap;
     private int availableSpace;
 
     public Storage() {
-        ownedFiles = new ArrayList<FileManager>();
+        localFiles = new ArrayList<FileManager>();
         storedChunks = new ArrayList<Chunk>();
         replicationHashmap = new ConcurrentHashMap<String, Integer>();
         availableSpace = 100000000; // 100 MB
+    }
+
+    public ArrayList<FileManager> getLocalFiles() {
+        return localFiles;
     }
 
     public ArrayList<Chunk> getStoredChunks() {
@@ -39,8 +41,17 @@ public class Storage {
         return getChunk(fileId + "_" + chunkNum);
     }
 
+    public FileManager getFileManager(String name) {
+        for (FileManager fm : localFiles) {
+            if (fm.getPathname().equals(name)) {
+                return fm;
+            }
+        }
+        return null;
+    }
+
     public boolean isFileOwner(String fileId) {
-        for (FileManager file : ownedFiles) {
+        for (FileManager file : localFiles) {
             if (file.getPathname().equals(fileId)) {
                 return true;
             }
@@ -48,9 +59,14 @@ public class Storage {
         return false;
     }
 
+    public void addFile(FileManager file) {
+        if (!localFiles.contains(file)) {
+            localFiles.add(file);
+        }
+    }
+
     // thread-safe method
     public synchronized boolean saveChunk(Chunk chunk) {
-        String chunkName = chunk.getName();
         int chunkSize = chunk.getData().length;
 
         // check available storage
@@ -58,35 +74,56 @@ public class Storage {
             System.out.println("ERROR: localStorage is full!");
             return false;
         }
-        
+
         // if chunk file owner or chunk already stored, do not store chunk
         if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) {
             return true;
         }
 
-        // check current replication degree and store chunk
-        if (replicationHashmap.containsKey(chunkName)) {
-            /*if (replicationHashmap.get(chunkName) < chunk.getDesiredReplicationDgr()) {
-                storedChunks.add(chunk);
-                replicationHashmap.put(chunkName, replicationHashmap.get(chunkName) + 1);
-            } else {
-                System.out.println("WARNING: max replication degree already reached!");
-                return;
-            }*/
-            storedChunks.add(chunk);
-            replicationHashmap.put(chunkName, replicationHashmap.get(chunkName) + 1);
-        } else {
-            storedChunks.add(chunk);
-            replicationHashmap.put(chunkName, 1);
-        }
-
-        // store locally
-        chunk.write();
-
-        // decrease peer available space
-        availableSpace -= chunk.getData().length;
+        // store chunk
+        writeChunk(chunk);
 
         return true;
+    }
+
+    private synchronized void writeChunk(Chunk chunk) {
+        String chunkName = chunk.getName();
+
+        /*System.out.println("---HASHMAP---");
+        for (String name : replicationHashmap.keySet()) {
+            System.out.println(name + " " + replicationHashmap.get(name));
+        }*/
+
+        // setup chunk in replication map
+        updateHashmap(chunkName,0);        
+
+        // if under replication degree
+        if (replicationHashmap.get(chunkName) < chunk.getDesiredRepDgr()) {
+            storedChunks.add(chunk);
+            // update current replication degree
+            updateHashmap(chunkName, 1);
+            // store chunk locally
+            chunk.write();
+            // decrease peer available space
+            availableSpace -= chunk.getData().length;
+        } else {
+            System.out.println("WARNING: max replication degree already reached!");
+            return;
+        }
+    }
+
+    public synchronized void updateHashmap(String chunkName, int repDgrOffset) {
+        if (Math.abs(repDgrOffset) > 1) {
+            System.out.println("Error: repDgrOffset is invalid!");
+            return;
+        }
+
+        if (replicationHashmap.containsKey(chunkName)) {
+            int currRepDgr = replicationHashmap.get(chunkName);
+            replicationHashmap.put(chunkName, currRepDgr + repDgrOffset);
+        } else {
+            replicationHashmap.put(chunkName, 0);
+        }
     }
 
     public void deleteChunks(String peerId, String fileId) {

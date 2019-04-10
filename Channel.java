@@ -54,7 +54,7 @@ public class Channel implements Runnable {
                 multicastSocket.receive(packet);
     
                 // process request
-                Peer.getThreadPool().execute(new MessageHandler(buf));
+                Peer.getThreadPool().execute(new MessageHandler(packet.getData()));
             }
         } catch (IOException e) {
             // TODO Auto-generated catch block

@@ -6,7 +6,6 @@ public class Chunk {
     
     private String fileId;
     private int chunkNum;
-    private int repDgr;
     private int desiredRepDgr;
     private byte[] data;
 
@@ -14,12 +13,18 @@ public class Chunk {
         this.fileId = fileId;
         this.chunkNum = chunkNum;
         this.data = data;
-        this.repDgr = 0;
         this.desiredRepDgr = desiredRepDgr; 
     }
 
     public String getFileId() {
         return fileId;
+    }
+
+    public String getHashedFileId() {
+        Storage storage = Peer.getLocalStorage();
+        FileManager fm = storage.getFileManager(fileId);
+        //String finalFileId = fileId + fm.getLastModified();
+        return Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(fileId)));
     }
 
     public int getNum() {
@@ -28,10 +33,6 @@ public class Chunk {
 
     public byte[] getData() {
         return data;
-    }
-
-    public int getRepDgr() {
-        return repDgr;
     }
 
     public int getDesiredRepDgr() {
@@ -44,14 +45,14 @@ public class Chunk {
 
     public void write() {
         // create chunk file on peer directory
-        String fileDir = Peer.getId() + "/" + fileId;
+        String fileDir = "Backup" + "/" + Peer.getId() + "/" + getHashedFileId();
         
         File dir = new File(fileDir);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        String filepath = fileDir + "/" + getName();
+        String filepath = fileDir + "/" + chunkNum;
         File file = new File(filepath);
         if (!file.exists()) {
             try {
