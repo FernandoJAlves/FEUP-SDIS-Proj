@@ -8,12 +8,19 @@ public class Chunk {
     private int chunkNum;
     private int desiredRepDgr;
     private byte[] data;
+    private long lastModified;
+
 
     public Chunk(String fileId, int chunkNum, byte[] data, int desiredRepDgr) {
+        this(fileId,chunkNum,data,desiredRepDgr,0);
+    } 
+
+    public Chunk(String fileId, int chunkNum, byte[] data, int desiredRepDgr, long lastModified) {
         this.fileId = fileId;
         this.chunkNum = chunkNum;
         this.data = data;
         this.desiredRepDgr = desiredRepDgr; 
+        this.lastModified = lastModified;
     }
 
     public String getFileId() {
@@ -21,10 +28,8 @@ public class Chunk {
     }
 
     public String getHashedFileId() {
-        Storage storage = Peer.getLocalStorage();
-        FileManager fm = storage.getFileManager(fileId);
-        //String finalFileId = fileId + fm.getLastModified();
-        return Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(fileId)));
+        String finalFileId = fileId + lastModified;
+        return Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(finalFileId)));
     }
 
     public int getNum() {

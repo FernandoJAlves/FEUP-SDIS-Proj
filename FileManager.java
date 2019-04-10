@@ -9,7 +9,6 @@ import java.io.IOException;
 public class FileManager {
 
     private String pathname;
-    private long lastModified;
     private List<Chunk> chunks;
 
     public FileManager(String pathname, int repDgr) {
@@ -19,10 +18,6 @@ public class FileManager {
 
     public String getPathname() {
         return pathname;
-    }
-
-    public long getLastModified() {
-        return lastModified;
     }
 
     public List<Chunk> getChunkList() {
@@ -38,22 +33,22 @@ public class FileManager {
         try (FileInputStream fileStream = new FileInputStream(file)) {
             BufferedInputStream bufStream = new BufferedInputStream(fileStream);
 
-            lastModified = file.lastModified();
+            long lastModified = file.lastModified();
             
             byte[] buf = new byte[maxChunkSize];
             int readBytes, chunkNum = 1;
             while ((readBytes = bufStream.read(buf)) != -1) {
                 if (readBytes == maxChunkSize) {
-                    chunks.add(new Chunk(pathname, chunkNum, buf, repDgr));
+                    chunks.add(new Chunk(pathname, chunkNum, buf, repDgr, lastModified));
                 } else {
                     byte[] auxBuf = Arrays.copyOf(buf, readBytes);
-                    chunks.add(new Chunk(pathname, chunkNum, auxBuf, repDgr));
+                    chunks.add(new Chunk(pathname, chunkNum, auxBuf, repDgr, lastModified));
                 }
                 chunkNum++;
                 buf = new byte[maxChunkSize];
             }
             if (file.length() % maxChunkSize == 0) {
-                chunks.add(new Chunk(pathname, chunkNum, null, repDgr));
+                chunks.add(new Chunk(pathname, chunkNum, null, repDgr, lastModified));
             }
             bufStream.close();
 
