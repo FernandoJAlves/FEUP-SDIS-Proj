@@ -7,9 +7,11 @@ sleep 1s;
 run_j_cmd () {
     case $1 in
         0)
+            echo "java Client localhost peer_3 BACKUP penguin.jpg 1"
             java Client localhost peer_3 BACKUP penguin.jpg 1
         ;;
         1)
+            echo "java Client localhost peer_3 DELETE penguin.jpg"
             java Client localhost peer_3 DELETE penguin.jpg
         ;;
     esac
