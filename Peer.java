@@ -116,7 +116,15 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void delete(String pathname) {
+        FileManager file = new FileManager(pathname, 0);
 
+        for (Chunk chunk : file.getChunkList()) {
+            String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
+            //MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message, chunk.getFileId(), chunk.getNum(), replicationDeg);
+            System.out.println("Sent Delete: " + message);
+            MessageSender sender = new MessageSender("MC",message.getBytes()); //send message through MC
+            threadpool.execute(sender);
+        }
     }
 
     // @Override

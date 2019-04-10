@@ -157,7 +157,15 @@ public class Message {
     // DELETE <Version> <SenderId> <FileId> <CRLF><CRLF>
     public static String mes_delete(String version, String senderId, String fileId) {
 
-        return "DELETE";
+        String finalVersion;
+        String finalId;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "DELETE " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + "\r\n\r\n";
     }
 
     // REMOVED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>

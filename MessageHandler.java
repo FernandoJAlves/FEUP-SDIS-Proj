@@ -1,4 +1,6 @@
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class MessageHandler implements Runnable {
     private String body;
@@ -26,6 +28,7 @@ public class MessageHandler implements Runnable {
     }
 
     public void run() {
+        //System.out.println("TEST");  //TODO: Remove later, only for tests
         if (this.args[2].equals(Peer.getId())) { // To ignore own messages
             return;
         }
@@ -80,7 +83,8 @@ public class MessageHandler implements Runnable {
             // send stored message
             String storedMsg = Message.mes_stored(version, Peer.getId(), fileId, chunkNum);
             MessageSender sender = new MessageSender("MC",storedMsg.getBytes()); //send message through MC
-            Peer.getThreadPool().execute(sender);
+            int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); //random delay between 0 and 400ms
+            Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
         }
     }
 
