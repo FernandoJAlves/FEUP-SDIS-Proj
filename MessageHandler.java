@@ -60,13 +60,17 @@ public class MessageHandler implements Runnable {
     private void handlePutChunk() {
         System.out.println("Received Putchunk!");
 
-        // retrieve local storage
-        Storage storage = Peer.getLocalStorage();
-    
+        //Arguments
+        String version = args[1];
+        String senderId = args[2];
         String fileId = this.args[3];
         int chunkNum = Integer.parseInt(this.args[4]);
-        byte[] data = body.getBytes();       
         int desiredRepDgr = Integer.parseInt(this.args[5]);
+
+        // retrieve local storage
+        Storage storage = Peer.getLocalStorage();
+
+        byte[] data = body.getBytes();    
 
         System.out.println(Arrays.toString(this.args));
 
@@ -74,7 +78,7 @@ public class MessageHandler implements Runnable {
         
         if (storage.saveChunk(chunk)) {
             // send stored message
-            String storedMsg = Message.mes_stored(this.args[1], Peer.getId(), fileId, chunkNum);
+            String storedMsg = Message.mes_stored(version, Peer.getId(), fileId, chunkNum);
             MessageSender sender = new MessageSender("MC",storedMsg.getBytes()); //send message through MC
             Peer.getThreadPool().execute(sender);
         }
@@ -83,11 +87,13 @@ public class MessageHandler implements Runnable {
     private void handleStored() {
         System.out.println("Received Stored!");
         
+        //Arguments
+        String fileId = this.args[3];
+        int chunkNum = Integer.parseInt(this.args[4]);
+
         // retrieve local storage
         Storage storage = Peer.getLocalStorage();
 
-        String fileId = this.args[3];
-        int chunkNum = Integer.parseInt(this.args[4]);
         String chunkName = fileId + "_" + chunkNum;
         
         storage.updateHashmap(chunkName,1);
@@ -96,6 +102,7 @@ public class MessageHandler implements Runnable {
     private void handleGetChunk() {
         System.out.println("Received Getchunk!");
         
+        //Arguments
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
@@ -110,6 +117,7 @@ public class MessageHandler implements Runnable {
     private void handleChunk() {
         System.out.println("Received Chunk!");
 
+        //Arguments
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
@@ -122,6 +130,7 @@ public class MessageHandler implements Runnable {
     private void handleDelete() {
         System.out.println("Received Delete!");
 
+        //Arguments
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
@@ -132,6 +141,7 @@ public class MessageHandler implements Runnable {
     private void handleRemoved() {
         System.out.println("Received Removed!");
 
+        //Arguments
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
