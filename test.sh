@@ -13,7 +13,7 @@ gnome-terminal -x sh -c '((sleep 60s && kill -9 $$)&); java Peer 1.0 3 peer_3 22
 
 gnome-terminal -x sh -c '((sleep 60s && kill -9 $$)&);
                         sleep 1s;
-                        java Client localhost peer_3 BACKUP penguin.jpg 1;
+                        java Client localhost peer_3 BACKUP penguin.jpg 2;
                         exec bash;'
 
 

@@ -33,22 +33,23 @@ public class FileManager {
         try (FileInputStream fileStream = new FileInputStream(file)) {
             BufferedInputStream bufStream = new BufferedInputStream(fileStream);
 
-            long lastModified = file.lastModified();
-            
+            String finalFileId = pathname + file.lastModified();
+            String fileHash = Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(finalFileId)));
+    
             byte[] buf = new byte[maxChunkSize];
             int readBytes, chunkNum = 1;
             while ((readBytes = bufStream.read(buf)) != -1) {
                 if (readBytes == maxChunkSize) {
-                    chunks.add(new Chunk(pathname, chunkNum, buf, repDgr, lastModified));
+                    chunks.add(new Chunk(fileHash, chunkNum, buf, repDgr));
                 } else {
                     byte[] auxBuf = Arrays.copyOf(buf, readBytes);
-                    chunks.add(new Chunk(pathname, chunkNum, auxBuf, repDgr, lastModified));
+                    chunks.add(new Chunk(fileHash, chunkNum, auxBuf, repDgr));
                 }
                 chunkNum++;
                 buf = new byte[maxChunkSize];
             }
             if (file.length() % maxChunkSize == 0) {
-                chunks.add(new Chunk(pathname, chunkNum, null, repDgr, lastModified));
+                chunks.add(new Chunk(fileHash, chunkNum, null, repDgr));
             }
             bufStream.close();
 

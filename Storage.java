@@ -41,6 +41,14 @@ public class Storage {
         return getChunk(fileId + "_" + chunkNum);
     }
 
+    public synchronized int getChunkRepDgr(String chunkName) {
+        if (replicationHashmap.contains(chunkName)) {
+            System.out.println("chunkName = " + chunkName);
+            return replicationHashmap.get(chunkName);
+        }
+        return 0;
+    }
+
     public FileManager getFileManager(String name) {
         for (FileManager fm : localFiles) {
             if (fm.getPathname().equals(name)) {
@@ -66,7 +74,7 @@ public class Storage {
     }
 
     // thread-safe method
-    public synchronized boolean saveChunk(Chunk chunk) {
+    public boolean saveChunk(Chunk chunk) {
         int chunkSize = chunk.getData().length;
 
         // check available storage
@@ -89,13 +97,8 @@ public class Storage {
     private synchronized void writeChunk(Chunk chunk) {
         String chunkName = chunk.getName();
 
-        /*System.out.println("---HASHMAP---");
-        for (String name : replicationHashmap.keySet()) {
-            System.out.println(name + " " + replicationHashmap.get(name));
-        }*/
-
         // setup chunk in replication map
-        updateHashmap(chunkName,0);        
+        updateHashmap(chunkName, 0);
 
         // if under replication degree
         if (replicationHashmap.get(chunkName) < chunk.getDesiredRepDgr()) {
@@ -113,6 +116,12 @@ public class Storage {
     }
 
     public synchronized void updateHashmap(String chunkName, int repDgrOffset) {
+
+        System.out.println("---HASHMAP---");
+        for (String name : replicationHashmap.keySet()) {
+            System.out.println(name + " " + replicationHashmap.get(name));
+        }
+
         if (Math.abs(repDgrOffset) > 1) {
             System.out.println("Error: repDgrOffset is invalid!");
             return;
@@ -120,21 +129,21 @@ public class Storage {
 
         if (replicationHashmap.containsKey(chunkName)) {
             int currRepDgr = replicationHashmap.get(chunkName);
-            replicationHashmap.put(chunkName, currRepDgr + repDgrOffset);
+            replicationHashmap.replace(chunkName, currRepDgr + repDgrOffset);
         } else {
             replicationHashmap.put(chunkName, 0);
         }
     }
 
-    public void deleteChunks(String peerId, String fileId) {
+    public void deleteChunks(String fileId) {
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
                 // erase chunk from chunks list
                 storedChunks.remove(chunk);
-                // decrease chunk replication degree
+                // erase chunk from replication map
                 replicationHashmap.remove(chunk.getName());
                 // erase file from peer directory
-                String filepath = peerId + "/" + chunk.getName();
+                String filepath = "Backup" + "/" + Peer.getId() + "/" + chunk.getNum();
                 File file = new File(filepath);
                 file.delete();
                 // increase peer available space
