@@ -1,7 +1,8 @@
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.concurrent.ExecutorService;
+import static java.util.concurrent.TimeUnit.*;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -11,7 +12,7 @@ import java.util.concurrent.Executors;
  */
 public class Peer implements RemoteInterface {
 
-    private static ExecutorService threadpool;
+    private static ScheduledExecutorService threadpool;
     private static Channel mc, mdb, mdr;
     private static Storage localStorage;
     private static String protocolVersion, id, accessPoint;
@@ -19,7 +20,7 @@ public class Peer implements RemoteInterface {
     public Peer(String[] args) {
         parseArguments(args);
         localStorage = new Storage();
-        threadpool = Executors.newFixedThreadPool(100);
+        threadpool = Executors.newScheduledThreadPool(100);
         threadpool.execute(mc);
         threadpool.execute(mdb);
         threadpool.execute(mdr);
@@ -75,7 +76,7 @@ public class Peer implements RemoteInterface {
         return null;
     }
 
-    public static ExecutorService getThreadPool(){
+    public static ScheduledExecutorService getThreadPool(){
         return threadpool;
     }
 
