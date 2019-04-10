@@ -67,7 +67,7 @@ public class MessageHandler implements Runnable {
         
         if (storage.saveChunk(chunk)) {
             // send stored message
-            String storedMsg = Message.mes_stored(this.args[1], this.args[2], this.args[3], Integer.parseInt(this.args[4]));
+            String storedMsg = Message.mes_stored(this.args[1], Peer.getId(), this.args[3], Integer.parseInt(this.args[4]));
             MessageSender sender = new MessageSender("MC",storedMsg.getBytes()); //send message through MC
             Peer.getThreadPool().execute(sender);
         }
@@ -79,6 +79,13 @@ public class MessageHandler implements Runnable {
     }
 
     private void handleGetChunk() {
+        System.out.println("Received Getchunk!");
+        
+        String version = args[1];
+        String senderId = args[2];
+        String fileId = args[3];
+        String chunkNo = args[4];
+        
         // TODO: Storage logic
 
 
@@ -86,14 +93,35 @@ public class MessageHandler implements Runnable {
     }
 
     private void handleChunk() {
+        System.out.println("Received Chunk!");
+
+        String version = args[1];
+        String senderId = args[2];
+        String fileId = args[3];
+        String chunkNo = args[4];
+        //TODO: Ver qual é o index do body, 5? Ou mais por causa do CRLFs?
+
         // TODO: Storage logic
     }
 
     private void handleDelete() {
+        System.out.println("Received Delete!");
+
+        String version = args[1];
+        String senderId = args[2];
+        String fileId = args[3];
+        String chunkNo = args[4];
         // TODO: Storage logic
     }
 
     private void handleRemoved() {
+        System.out.println("Received Removed!");
+
+        String version = args[1];
+        String senderId = args[2];
+        String fileId = args[3];
+        String chunkNo = args[4];
+        
         // TODO: Storage logic
     }
 }

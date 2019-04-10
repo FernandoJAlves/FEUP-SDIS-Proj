@@ -102,6 +102,7 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : manager.getChunkList()) {
             byte[] message = getByteMessage(chunk);
+            //MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message, chunk.getFileId(), chunk.getNum(), replicationDeg);
             MessageSender sender = new MessageSender("MDB",message); //send message through MDB
             threadpool.execute(sender);
         }
