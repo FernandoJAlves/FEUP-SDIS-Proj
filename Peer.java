@@ -99,8 +99,8 @@ public class Peer implements RemoteInterface {
     // @Override
     public void backup(String filepath, int replicationDeg) {
         FileManager file = new FileManager(filepath, replicationDeg);
-        localStorage.add(file);
-        
+        localStorage.addFile(file);
+
         for (Chunk chunk : file.getChunkList()) {
             byte[] message = getByteMessage(chunk);
             //MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message, chunk.getFileId(), chunk.getNum(), replicationDeg);
