@@ -97,9 +97,11 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void backup(String filepath, int replicationDeg) {
-        FileManager manager = new FileManager(filepath, replicationDeg);
-
-        for (Chunk chunk : manager.getChunkList()) {
+        FileManager file = new FileManager(filepath, replicationDeg);
+        System.out.println("RepDgr = " + replicationDeg);
+        localStorage.addFile(file);
+        
+        for (Chunk chunk : file.getChunkList()) {
             byte[] message = getByteMessage(chunk);
             MessageSender sender = new MessageSender("MDB",message); //send message through MDB
             threadpool.execute(sender);
