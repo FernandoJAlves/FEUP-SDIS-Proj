@@ -95,6 +95,7 @@ public class MessageHandler implements Runnable {
         Storage storage = Peer.getLocalStorage();
 
         String chunkName = fileId + "_" + chunkNum;
+        System.out.println("chunkName = " + chunkName);
         
         storage.updateHashmap(chunkName,1);
     }

@@ -8,28 +8,16 @@ public class Chunk {
     private int chunkNum;
     private int desiredRepDgr;
     private byte[] data;
-    private long lastModified;
-
 
     public Chunk(String fileId, int chunkNum, byte[] data, int desiredRepDgr) {
-        this(fileId,chunkNum,data,desiredRepDgr,0);
-    } 
-
-    public Chunk(String fileId, int chunkNum, byte[] data, int desiredRepDgr, long lastModified) {
         this.fileId = fileId;
         this.chunkNum = chunkNum;
         this.data = data;
         this.desiredRepDgr = desiredRepDgr; 
-        this.lastModified = lastModified;
     }
 
     public String getFileId() {
         return fileId;
-    }
-
-    public String getHashedFileId() {
-        String finalFileId = fileId + lastModified;
-        return Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(finalFileId)));
     }
 
     public int getNum() {
@@ -50,7 +38,7 @@ public class Chunk {
 
     public void write() {
         // create chunk file on peer directory
-        String fileDir = "Backup" + "/" + Peer.getId() + "/" + getHashedFileId();
+        String fileDir = "Backup" + "/" + Peer.getId() + "/" + getFileId();
         
         File dir = new File(fileDir);
         if (!dir.exists()) {
