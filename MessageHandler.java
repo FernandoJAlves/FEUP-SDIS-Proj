@@ -139,8 +139,9 @@ public class MessageHandler implements Runnable {
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
-        String chunkNo = args[4];
-        // TODO: Storage logic
+
+        Storage storage = Peer.getLocalStorage();
+        storage.deleteChunks(fileId);
     }
 
     private void handleRemoved() {

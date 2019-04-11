@@ -136,6 +136,7 @@ public class Storage {
     }
 
     public void deleteChunks(String fileId) {
+        System.out.println("In delete: " + this.storedChunks.size());
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
                 // erase chunk from chunks list
@@ -143,8 +144,9 @@ public class Storage {
                 // erase chunk from replication map
                 replicationHashmap.remove(chunk.getName());
                 // erase file from peer directory
-                String filepath = "Backup" + "/" + Peer.getId() + "/" + chunk.getNum();
+                String filepath = "Backup" + "/" + Peer.getId() + "/" + fileId + "/" + chunk.getNum();
                 File file = new File(filepath);
+                System.out.println(filepath);
                 file.delete();
                 // increase peer available space
                 availableSpace += chunk.getData().length;
