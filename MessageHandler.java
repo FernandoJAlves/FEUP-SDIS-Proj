@@ -71,7 +71,7 @@ public class MessageHandler implements Runnable {
         int desiredRepDgr = Integer.parseInt(this.args[5]);
 
         // retrieve local storage
-        Storage storage = Peer.getLocalStorage();
+        Storage storage = Peer.getStorage();
 
         byte[] data = body.getBytes();    
 
@@ -96,7 +96,7 @@ public class MessageHandler implements Runnable {
         int chunkNum = Integer.parseInt(this.args[4]);
 
         // retrieve local storage
-        Storage storage = Peer.getLocalStorage();
+        Storage storage = Peer.getStorage();
 
         String chunkName = fileId + "_" + chunkNum;
         System.out.println("chunkName = " + chunkName);

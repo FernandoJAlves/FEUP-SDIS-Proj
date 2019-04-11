@@ -1,8 +1,11 @@
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Storage {
+public class Storage implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private ArrayList<FileManager> localFiles;
     private ArrayList<Chunk> storedChunks;
@@ -24,7 +27,11 @@ public class Storage {
         return storedChunks;
     }
 
-    public int getAvailableSpace() {
+    public synchronized ConcurrentHashMap<String, Integer> getReplicationHashmap() {
+        return replicationHashmap;
+    }
+
+    public synchronized int getAvailableSpace() {
         return availableSpace;
     }
 
@@ -43,24 +50,14 @@ public class Storage {
 
     public synchronized int getChunkRepDgr(String chunkName) {
         if (replicationHashmap.contains(chunkName)) {
-            System.out.println("chunkName = " + chunkName);
             return replicationHashmap.get(chunkName);
         }
         return 0;
     }
 
-    public FileManager getFileManager(String name) {
-        for (FileManager fm : localFiles) {
-            if (fm.getPathname().equals(name)) {
-                return fm;
-            }
-        }
-        return null;
-    }
-
     public boolean isFileOwner(String fileId) {
         for (FileManager file : localFiles) {
-            if (file.getPathname().equals(fileId)) {
+            if (file.getHashedFileId().equals(fileId)) {
                 return true;
             }
         }
@@ -74,12 +71,12 @@ public class Storage {
     }
 
     // thread-safe method
-    public boolean saveChunk(Chunk chunk) {
+    public synchronized boolean saveChunk(Chunk chunk) {
         int chunkSize = chunk.getData().length;
 
         // check available storage
         if (availableSpace < chunkSize) {
-            System.out.println("ERROR: localStorage is full!");
+            System.out.println("ERROR: storage is full!");
             return false;
         }
 
@@ -117,10 +114,10 @@ public class Storage {
 
     public synchronized void updateHashmap(String chunkName, int repDgrOffset) {
 
-        System.out.println("---HASHMAP---");
+        /*System.out.println("---HASHMAP---");
         for (String name : replicationHashmap.keySet()) {
             System.out.println(name + " " + replicationHashmap.get(name));
-        }
+        }*/
 
         if (Math.abs(repDgrOffset) > 1) {
             System.out.println("Error: repDgrOffset is invalid!");

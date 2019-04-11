@@ -1,9 +1,16 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public class Utils {
 
-    public Utils() {}
+    public Utils() {
+    }
 
     // TODO: See if there is a better way of doing this
     public static byte[] encodeSHA256(String toEncode) {
@@ -27,5 +34,49 @@ public class Utils {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+
+    public static void saveStorage() {
+        try {
+            String dirPath = "Backup/" + Peer.getId();
+            File dir = new File(dirPath);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            FileOutputStream fileOut = new FileOutputStream(dirPath + "/storage.ser");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(Peer.getStorage());
+            out.close();
+            fileOut.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        }
+    }
+
+    public static void loadStorage() {
+        try {
+            String path = "Backup/" + Peer.getId() + "/storage.ser";
+
+            File file = new File(path);
+            if (file.exists()) {
+                System.out.println("Storage loaded");
+                FileInputStream fileIn = new FileInputStream(path);
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+                Peer.setStorage((Storage) in.readObject());
+                in.close();
+                fileIn.close();
+            } else {
+                System.out.println("Storage created!");
+                Peer.setStorage(new Storage());
+            }
+        } catch (IOException i) {
+            i.printStackTrace();
+            return;
+        } catch (ClassNotFoundException c) {
+            System.out.println("Storage class not found!");
+            c.printStackTrace();
+            return;
+        }
     }
 }

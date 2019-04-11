@@ -1,8 +1,11 @@
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 
-public class Chunk {
+public class Chunk implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     private String fileId;
     private int chunkNum;

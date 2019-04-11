@@ -3,6 +3,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 
 /**
@@ -14,12 +15,11 @@ public class Peer implements RemoteInterface {
 
     private static ScheduledExecutorService threadpool;
     private static Channel mc, mdb, mdr;
-    private static Storage localStorage;
+    private static Storage storage;
     private static String protocolVersion, id, accessPoint;
 
     public Peer(String[] args) {
         parseArguments(args);
-        localStorage = new Storage();
         threadpool = Executors.newScheduledThreadPool(100);
         threadpool.execute(mc);
         threadpool.execute(mdb);
@@ -43,6 +43,17 @@ public class Peer implements RemoteInterface {
             System.out.println("ERROR in main\n");
             e.printStackTrace();
         }
+
+        // load possible saved storage
+        Utils.loadStorage();
+
+        // schedule storage serialization
+        threadpool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Utils.saveStorage();
+            }
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     void parseArguments(String args[]) {
@@ -55,28 +66,28 @@ public class Peer implements RemoteInterface {
     }
 
     public static Channel getChannel(String channel) {
-        //TODO: Remove prints, just for testing
-        if (channel == "MC"){
-            //System.out.println("Got mc");
+        // TODO: Remove prints, just for testing
+        if (channel == "MC") {
+            // System.out.println("Got mc");
             return mc;
         }
-            
-        if (channel == "MDB"){
-            //System.out.println("Got MDB");
+
+        if (channel == "MDB") {
+            // System.out.println("Got MDB");
             return mdb;
         }
-            
-        if (channel == "MDR"){
-            //System.out.println("Got MDR");
+
+        if (channel == "MDR") {
+            // System.out.println("Got MDR");
             return mdr;
         }
-            
+
         // default
         System.out.println("ERROR: Reached default in getChannel");
         return null;
     }
 
-    public static ScheduledExecutorService getThreadPool(){
+    public static ScheduledExecutorService getThreadPool() {
         return threadpool;
     }
 
@@ -84,12 +95,17 @@ public class Peer implements RemoteInterface {
         return id;
     }
 
-    public static Storage getLocalStorage() {
-        return localStorage;
+    public static Storage getStorage() {
+        return storage;
+    }
+
+    public static void setStorage(Storage s) {
+        storage = s;
     }
 
     public byte[] getByteMessage(Chunk chunk) {
-        String header = Message.mes_putchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum(), chunk.getDesiredRepDgr());
+        String header = Message.mes_putchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum(),
+                chunk.getDesiredRepDgr());
         String headerData = Message.mes_addBody(header, chunk.getData());
         byte[] message = new byte[headerData.length()];
         System.arraycopy(headerData.getBytes(), 0, message, 0, headerData.length());
@@ -99,11 +115,12 @@ public class Peer implements RemoteInterface {
     // @Override
     public void backup(String filepath, int replicationDeg) {
         FileManager file = new FileManager(filepath, replicationDeg);
-        localStorage.addFile(file);
+        storage.addFile(file);
 
         for (Chunk chunk : file.getChunkList()) {
             byte[] message = getByteMessage(chunk);
-            MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message, chunk.getFileId(), chunk.getNum(), replicationDeg);
+            MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
+                    replicationDeg);
             threadpool.execute(sender);
         }
     }
@@ -119,9 +136,10 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            //MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message, chunk.getFileId(), chunk.getNum(), replicationDeg);
+            // MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message,
+            // chunk.getFileId(), chunk.getNum(), replicationDeg);
             System.out.println("Sent Delete: " + message);
-            MessageSender sender = new MessageSender("MC",message.getBytes()); //send message through MC
+            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }
     }
