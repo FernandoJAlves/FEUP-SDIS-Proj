@@ -140,7 +140,7 @@ public class MessageHandler implements Runnable {
         String senderId = args[2];
         String fileId = args[3];
 
-        Storage storage = Peer.getLocalStorage();
+        Storage storage = Peer.getStorage();
         storage.deleteChunks(fileId);
     }
 

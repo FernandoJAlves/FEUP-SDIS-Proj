@@ -48,12 +48,8 @@ public class Peer implements RemoteInterface {
         Utils.loadStorage();
 
         // schedule storage serialization
-        threadpool.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                Utils.saveStorage();
-            }
-        }, 10, 10, TimeUnit.SECONDS);
+        SaveDataToFile saver = new SaveDataToFile(); //Saves map to file every 10 seconds
+        threadpool.scheduleAtFixedRate(saver, 10, 10, TimeUnit.SECONDS);
     }
 
     void parseArguments(String args[]) {
