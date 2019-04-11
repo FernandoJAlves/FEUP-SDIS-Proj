@@ -6,7 +6,7 @@ public class SaveDataToFile implements Runnable {
     }
 
     public void run() {
-        System.out.println("Save");
+        //System.out.println("Save");
         Utils.saveStorage();
     }
 }
