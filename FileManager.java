@@ -5,15 +5,21 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 
-public class FileManager {
+public class FileManager implements Serializable {
 
-    private String pathname;
+    private static final long serialVersionUID = 1L;
+    
+    private File file;
+    private String pathname, hashedFileId;
     private List<Chunk> chunks;
 
     public FileManager(String pathname, int repDgr) {
         this.pathname = pathname;
-        getChunks(repDgr);
+        this.file = new File(pathname);
+        this.hashedFileId = getHashedFileId();
+        this.chunks = getChunks(repDgr);
     }
 
     public String getPathname() {
@@ -24,8 +30,13 @@ public class FileManager {
         return chunks;
     }
 
-    private void getChunks(int repDgr) {
-        chunks = new ArrayList<Chunk>();
+    public String getHashedFileId() {
+        String finalFileId = pathname + file.lastModified(); 
+        return Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(finalFileId)));
+    }
+
+    private List<Chunk> getChunks(int repDgr) {
+        List<Chunk> chunks = new ArrayList<Chunk>();
 
         int maxChunkSize = 64000; // 64KB per Chunk
 
@@ -33,23 +44,20 @@ public class FileManager {
         try (FileInputStream fileStream = new FileInputStream(file)) {
             BufferedInputStream bufStream = new BufferedInputStream(fileStream);
 
-            String finalFileId = pathname + file.lastModified();
-            String fileHash = Utils.bytesToHex(Utils.encodeSHA256(String.valueOf(finalFileId)));
-    
             byte[] buf = new byte[maxChunkSize];
             int readBytes, chunkNum = 1;
             while ((readBytes = bufStream.read(buf)) != -1) {
                 if (readBytes == maxChunkSize) {
-                    chunks.add(new Chunk(fileHash, chunkNum, buf, repDgr));
+                    chunks.add(new Chunk(hashedFileId, chunkNum, buf, repDgr));
                 } else {
                     byte[] auxBuf = Arrays.copyOf(buf, readBytes);
-                    chunks.add(new Chunk(fileHash, chunkNum, auxBuf, repDgr));
+                    chunks.add(new Chunk(hashedFileId, chunkNum, auxBuf, repDgr));
                 }
                 chunkNum++;
                 buf = new byte[maxChunkSize];
             }
             if (file.length() % maxChunkSize == 0) {
-                chunks.add(new Chunk(fileHash, chunkNum, null, repDgr));
+                chunks.add(new Chunk(hashedFileId, chunkNum, null, repDgr));
             }
             bufStream.close();
 
@@ -57,5 +65,7 @@ public class FileManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return chunks;
     }
 }

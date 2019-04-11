@@ -21,7 +21,7 @@ public class MessageSenderPutChunk implements Runnable {
 
     public void run() {
         String chunkName = fileId + "_" + chunkNumber;
-        int knownRepDeg = Peer.getLocalStorage().getChunkRepDgr(chunkName);
+        int knownRepDeg = Peer.getStorage().getChunkRepDgr(chunkName);
 
         if(knownRepDeg < wantedRepDeg) { //if wanted repDeg has not been reached
             if(attemptCount >= 5){
