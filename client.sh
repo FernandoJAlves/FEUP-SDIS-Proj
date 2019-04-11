@@ -1,6 +1,6 @@
 echo "Options: ";
-echo "1 - java Client localhost peer_3 BACKUP penguin.jpg 1;";
-echo "2 - java Client localhost peer_3 DELETE penguin.jpg;";
+echo "1 - java Client localhost peer_2 BACKUP penguin.jpg 1;";
+echo "2 - java Client localhost peer_2 DELETE penguin.jpg;";
 
 echo "0 - Close Options";
 echo Value: ;
@@ -8,12 +8,12 @@ read val;
 run_j_cmd () {
     case $1 in
         1)
-            echo "java Client localhost peer_3 BACKUP penguin.jpg 1"
-            java Client localhost peer_3 BACKUP penguin.jpg 1
+            echo "java Client localhost peer_1 BACKUP penguin.jpg 1"
+            java Client 10.227.161.31 peer_1 BACKUP penguin.jpg 1
         ;;
         2)
-            echo "java Client localhost peer_3 DELETE penguin.jpg"
-            java Client localhost peer_3 DELETE penguin.jpg
+            echo "java Client localhost peer_2 DELETE penguin.jpg"
+            java Client 10.227.161.0 peer_1 DELETE penguin.jpg
         ;;
         0)
             echo "Leaving..."

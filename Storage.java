@@ -133,6 +133,7 @@ public class Storage implements Serializable {
     }
 
     public void deleteChunks(String fileId) {
+        String dirPath = "Backup" + "/" + Peer.getId() + "/" + fileId;
         System.out.println("In delete: " + this.storedChunks.size());
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
@@ -141,13 +142,17 @@ public class Storage implements Serializable {
                 // erase chunk from replication map
                 replicationHashmap.remove(chunk.getName());
                 // erase file from peer directory
-                String filepath = "Backup" + "/" + Peer.getId() + "/" + fileId + "/" + chunk.getNum();
+                String filepath = dirPath + "/" + chunk.getNum();
                 File file = new File(filepath);
                 System.out.println(filepath);
                 file.delete();
                 // increase peer available space
                 availableSpace += chunk.getData().length;
             }
+        }
+        File dir = new File(dirPath);  //TODO: Ver se pinta \/
+        if (dir.exists()) {
+            dir.delete();
         }
     }
 }
