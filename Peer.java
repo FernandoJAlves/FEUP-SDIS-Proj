@@ -48,7 +48,7 @@ public class Peer implements RemoteInterface {
         Utils.loadStorage();
 
         // schedule storage serialization
-        SaveDataToFile saver = new SaveDataToFile(); //Saves map to file every 10 seconds
+        SaveDataToFile saver = new SaveDataToFile(); //Saves map to file every 10 seconds //TODO: If class does not do anything else, remove it and just create a runnable
         threadpool.scheduleAtFixedRate(saver, 10, 10, TimeUnit.SECONDS);
     }
 
