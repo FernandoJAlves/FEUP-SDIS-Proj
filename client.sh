@@ -6,6 +6,7 @@ echo "4 - java Client localhost peer_1 BACKUP penguin.jpg 1;";
 echo "5 - java Client localhost peer_1 DELETE penguin.jpg;";
 echo "6 - java Client localhost peer_1 RESTORE penguin.jpg;";
 
+echo "9 - java Client localhost peer_1 STATE;";
 echo "0 - Close Options";
 echo Value: ;
 read val;
@@ -35,6 +36,10 @@ run_j_cmd () {
         6)
             echo "java Client localhost peer_1 RESTORE penguin.jpg"
             java Client localhost peer_1 RESTORE penguin.jpg
+        ;;
+        9)
+            echo "java Client localhost peer_1 STATE"
+            java Client localhost peer_1 STATE
         ;;
         0)
             echo "Leaving..."

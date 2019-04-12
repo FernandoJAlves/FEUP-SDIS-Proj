@@ -168,6 +168,31 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void state() {
-        System.out.println(storage);
+        System.out.println(storage.getReplicationHashmap());
+
+        System.out.println("=================\nFiles Backed up:");
+
+        for(FileManager f : storage.getLocalFiles()){
+            System.out.println();
+            System.out.println("     - Filename: " + f.getPathname());
+            System.out.println("     - Hashed Id: " + f.getHashedFileId());
+            System.out.println("     - Desired Rep Degree: " + f.getRepDgr());
+            System.out.println("     - Chunks: ");
+            for(Chunk chunk : f.getChunkList()){
+                System.out.println("        - Id: " + chunk.getNum());
+                System.out.println("        - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+            }
+        }
+
+        System.out.println("\n=================\nChunks Stored:");
+
+        for(Chunk chunk : storage.getStoredChunks()){
+            System.out.println();
+            System.out.println(" - Id: " + chunk.getNum());
+            System.out.println(" - Size: " + chunk.getData().length/1000.0 + " KBytes");
+            System.out.println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+        }
+
+        System.out.println("\n=================\nPeer Max Size: " + storage.getAvailableSpace() + " bytes\n=================");
     }
 }
