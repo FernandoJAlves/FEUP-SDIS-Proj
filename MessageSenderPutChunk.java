@@ -26,15 +26,11 @@ public class MessageSenderPutChunk implements Runnable {
         if(knownRepDeg < wantedRepDeg) { //if wanted repDeg has not been reached
             if(attemptCount >= 5){
                 System.out.println("Could not backup!");
-                System.out.println("CurrRepDgr = " + knownRepDeg);
             }
             else{
                 Peer.getChannel(channel).send(message);
                 attemptCount++; //next attempt
                 waitInt *= 2;
-                //System.out.println("Attempt Number: " + attemptCount);
-                //System.out.println("CurrRepDgr = " + knownRepDeg);
-                //System.out.println(waitInt);
                 Peer.getThreadPool().schedule(this, (int)waitInt, TimeUnit.SECONDS);
             }
         }

@@ -10,14 +10,14 @@ public class Storage implements Serializable {
 
     private ArrayList<FileManager> localFiles;
     private ArrayList<Chunk> storedChunks, restoredChunks;
-    private ConcurrentHashMap<String, Integer> replicationHashmap;
+    private ConcurrentHashMap<String, ArrayList<Integer>> replicationHashmap;
     private int availableSpace;
 
     public Storage() {
         localFiles = new ArrayList<FileManager>();
         storedChunks = new ArrayList<Chunk>();
         restoredChunks = new ArrayList<Chunk>();
-        replicationHashmap = new ConcurrentHashMap<String, Integer>();
+        replicationHashmap = new ConcurrentHashMap<String, ArrayList<Integer>>();
         availableSpace = 100000000; // 100 MB
     }
 
@@ -33,7 +33,7 @@ public class Storage implements Serializable {
         return restoredChunks;
     }
 
-    public synchronized ConcurrentHashMap<String, Integer> getReplicationHashmap() {
+    public synchronized ConcurrentHashMap<String, ArrayList<Integer>> getReplicationHashmap() {
         return replicationHashmap;
     }
 
@@ -49,10 +49,11 @@ public class Storage implements Serializable {
 
     public void addRestoredChunk(Chunk chunk) {
         for (Chunk c : restoredChunks) {
-            if (!chunk.getName().equals(c.getName())) {
-                restoredChunks.add(c);
+            if (chunk.getName().equals(c.getName())) {
+                return;
             }
         }
+        restoredChunks.add(chunk);
     }
 
     public boolean isFileOwner(String fileId) {
@@ -88,17 +89,17 @@ public class Storage implements Serializable {
 
     public int getChunkRepDgr(String chunkName) {
         if (replicationHashmap.containsKey(chunkName)) {
-            return replicationHashmap.get(chunkName);
+            return replicationHashmap.get(chunkName).size();
         }
         return 0;
     }
 
-    public boolean saveChunk(Chunk chunk) {
+    public boolean saveChunk(Chunk chunk, int peerId) {
         int chunkSize = chunk.getData().length;
 
         // check available storage
         if (availableSpace < chunkSize) {
-            System.out.println("ERROR: storage is full!");
+            System.out.println("Error: storage is full!");
             return false;
         }
 
@@ -108,44 +109,40 @@ public class Storage implements Serializable {
         }
 
         // store chunk
-        writeChunk(chunk);
+        writeChunk(chunk, peerId);
 
         return true;
     }
 
-    private void writeChunk(Chunk chunk) {
+    private void writeChunk(Chunk chunk, int peerId) {
         String chunkName = chunk.getName();
 
-        // setup chunk in replication map
-        updateHashmap(chunkName, 0);
+        int currReplicationDgr = getChunkRepDgr(chunkName);
 
         // if under replication degree
-        if (replicationHashmap.get(chunkName) < chunk.getDesiredRepDgr()) {
+        if (currReplicationDgr < chunk.getDesiredRepDgr()) {
             storedChunks.add(chunk);
             // update current replication degree
-            updateHashmap(chunkName, 1);
+            updateHashmap(chunkName, peerId);
             // store chunk locally
             chunk.write();
             // decrease peer available space
             availableSpace -= chunk.getData().length;
         } else {
-            System.out.println("WARNING: max replication degree already reached!");
+            System.out.println("Warning: max replication degree already reached!");
             return;
         }
     }
 
-    public void updateHashmap(String chunkName, int repDgrOffset) {
-        if (Math.abs(repDgrOffset) > 1) {
-            System.out.println("Error: repDgrOffset is invalid!");
-            return;
-        }
-
+    public void updateHashmap(String chunkName, int peerId) {
+        ArrayList<Integer> peerList;
         if (replicationHashmap.containsKey(chunkName)) {
-            int currRepDgr = replicationHashmap.get(chunkName);
-            replicationHashmap.replace(chunkName, currRepDgr + repDgrOffset);
+            peerList = replicationHashmap.get(chunkName);
         } else {
-            replicationHashmap.put(chunkName, 0);
+            peerList = new ArrayList<Integer>();
         }
+        peerList.add(peerId);
+        replicationHashmap.put(chunkName, peerList);
     }
 
     public void deleteChunks(String fileId) {

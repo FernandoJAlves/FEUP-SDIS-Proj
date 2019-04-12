@@ -105,38 +105,35 @@ public class Message {
     }
 
     // <MessageType> <Version> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
-    public static String mes_putchunk(String version, String id, String fileId, int chunkNo, int repDeg) {
+    public static String mes_putchunk(String version, int id, String fileId, int chunkNo, int repDeg) {
         // TODO: check all of the input values
 
         String finalVersion;
-        String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
             return "ERROR";
         }
 
-        return "PUTCHUNK " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + " " + repDeg
-                + "\r\n\r\n";
+        return "PUTCHUNK " + finalVersion + " " + id + " " + fileId + " " + chunkNo + " " + repDeg + "\r\n\r\n";
     }
 
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
-    public static String mes_stored(String version, String id, String fileId, int chunkNo) {
+    public static String mes_stored(String version, int id, String fileId, int chunkNo) {
         // TODO: check all of the input values
 
         String finalVersion;
-        String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
             return "ERROR";
         }
 
-        return "STORED " + finalVersion + " " + Integer.parseInt(id) + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        return "STORED " + finalVersion + " " + id + " " + fileId + " " + chunkNo + "\r\n\r\n";
     }
 
     // GETCHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
-    public static String mes_getchunk(String version, String senderId, String fileId, int chunkNo) {
+    public static String mes_getchunk(String version, int senderId, String fileId, int chunkNo) {
 
         String finalVersion;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
@@ -145,12 +142,12 @@ public class Message {
             return "ERROR";
         }
 
-        return "GETCHUNK " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + " " + chunkNo
+        return "GETCHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo
                 + "\r\n\r\n";
     }
 
     // CHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF><Body>
-    public static String mes_chunk(String version, String senderId, String fileId, int chunkNo) {
+    public static String mes_chunk(String version, int senderId, String fileId, int chunkNo) {
 
         String finalVersion;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
@@ -159,21 +156,20 @@ public class Message {
             return "ERROR";
         }
 
-        return "CHUNK " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        return "CHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + "\r\n\r\n";
     }
 
     // DELETE <Version> <SenderId> <FileId> <CRLF><CRLF>
-    public static String mes_delete(String version, String senderId, String fileId) {
+    public static String mes_delete(String version, int senderId, String fileId) {
 
         String finalVersion;
-        String finalId;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
             return "ERROR";
         }
 
-        return "DELETE " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + "\r\n\r\n";
+        return "DELETE " + finalVersion + " " + senderId + " " + fileId + "\r\n\r\n";
     }
 
     // REMOVED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -192,25 +188,11 @@ public class Message {
         return mes_addBody(header, chunk.read());
     }
 
-/*
-    public static String mes_addBody(String message, byte[] body) {
-        System.out.println(" - MES Header Size: " + message.length());
-        System.out.println(" - MES Body Size: " + body.length);
-        String ret = message + new String(body, 0, body.length);
-        System.out.println(" - MES Ret Size: " + ret.length());
-        return ret;
-    }
-*/
-
     public static byte[] mes_addBody(String msg, byte[] body) {
-        System.out.println(" - MES Mes Size: " + msg.length());
         byte[] header = msg.getBytes();
-        System.out.println(" - MES Header Size: " + header.length);
-        System.out.println(" - MES Body Size: " + body.length);
         byte[] message = new byte[header.length + body.length];
         System.arraycopy(header, 0, message, 0, header.length);
         System.arraycopy(body, 0, message, header.length, body.length);
-        System.out.println(" - MES Return Size: " + message.length);
         return message;
     }
 }

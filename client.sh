@@ -18,7 +18,7 @@ run_j_cmd () {
         2)
             echo "java Client localhost peer_1 DELETE qwerty.txt"
             java Client localhost peer_1 DELETE qwerty.txt
-            # java Client 10.227.161.0 peer_1 DELETE penguin.jpg
+            # java Client 10.227.161.31 peer_1 DELETE penguin.jpg
         ;;
         3)
             echo "java Client localhost peer_1 RESTORE qwerty.txt"

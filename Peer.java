@@ -1,7 +1,6 @@
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import static java.util.concurrent.TimeUnit.*;
 
 import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,7 +17,8 @@ public class Peer implements RemoteInterface {
     private static ScheduledExecutorService threadpool;
     private static Channel mc, mdb, mdr;
     private static Storage storage;
-    private static String protocolVersion, id, accessPoint;
+    private static String protocolVersion, accessPoint;
+    private static int id;
 
     public Peer(String[] args) {
         parseArguments(args);
@@ -50,13 +50,14 @@ public class Peer implements RemoteInterface {
         Utils.loadStorage();
 
         // schedule storage serialization
-        SaveDataToFile saver = new SaveDataToFile(); //Saves map to file every 10 seconds //TODO: If class does not do anything else, remove it and just create a runnable
+        SaveDataToFile saver = new SaveDataToFile(); // Saves map to file every 10 seconds //TODO: If class does not do
+                                                     // anything else, remove it and just create a runnable
         threadpool.scheduleAtFixedRate(saver, 10, 10, TimeUnit.SECONDS);
     }
 
     void parseArguments(String args[]) {
         protocolVersion = args[0];
-        id = args[1];
+        id = Integer.parseInt(args[1]);
         accessPoint = args[2];
         mc = new Channel(args[3], Integer.parseInt(args[4]));
         mdb = new Channel(args[5], Integer.parseInt(args[6]));
@@ -93,7 +94,7 @@ public class Peer implements RemoteInterface {
         return threadpool;
     }
 
-    public static String getId() {
+    public static int getId() {
         return id;
     }
 
@@ -111,7 +112,8 @@ public class Peer implements RemoteInterface {
         storage.addFile(file);
 
         for (Chunk chunk : file.getChunkList()) {
-            byte[] message = Message.getPutchunkMessage(chunk);;
+            byte[] message = Message.getPutchunkMessage(chunk);
+            ;
             MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
                     replicationDeg);
             threadpool.execute(sender);
@@ -135,9 +137,15 @@ public class Peer implements RemoteInterface {
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.execute(sender);
         }
- 
-        // aggregate all restored chunks
-        Utils.aggregateChunks(filepath, hashedFileId);
+
+        try {
+            Thread.sleep(1000); // TODO: justify waiting time
+            // aggregate all restored chunks 
+            Utils.aggregateChunks(filepath, hashedFileId);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         // clear requested chunks
         storage.getRestoredChunks().clear();
     }
