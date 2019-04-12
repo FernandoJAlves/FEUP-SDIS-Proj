@@ -39,8 +39,7 @@ public class MessageHandler implements Runnable {
     }
 
     public void run() {
-        // System.out.println("TEST"); //TODO: Remove later, only for tests
-        if (args[2].equals(Peer.getId())) { // To ignore own messages
+        if (Integer.parseInt(args[2]) == Peer.getId()) { // To ignore own messages
             return;
         }
 
@@ -64,7 +63,7 @@ public class MessageHandler implements Runnable {
             handleRemoved();
             return;
         default:
-            System.out.println("ERROR: Entered MessageHandler Switch Default");
+            System.out.println("Error: Entered MessageHandler Switch Default");
             break;
         }
     }
@@ -75,19 +74,16 @@ public class MessageHandler implements Runnable {
 
         // Arguments
         String version = args[1];
-        String senderId = args[2];
+        int senderId = Integer.parseInt(args[2]);
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
         int desiredRepDgr = Integer.parseInt(args[5]);
 
         // retrieve local storage
         Storage storage = Peer.getStorage();
-
-        //byte[] data = body.getBytes();
-        //System.out.println(" - MES_HAND Body Size: " + data.length);
         Chunk chunk = new Chunk(fileId, chunkNum, body, desiredRepDgr);
 
-        if (storage.saveChunk(chunk)) {
+        if (storage.saveChunk(chunk,senderId)) {
             // send stored message
             String storedMsg = Message.mes_stored(version, Peer.getId(), fileId, chunkNum);
             MessageSender sender = new MessageSender("MC", storedMsg.getBytes()); // send message through MC
@@ -100,6 +96,7 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Stored!");
 
         // Arguments
+        int senderId = Integer.parseInt(args[2]);
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
@@ -107,8 +104,7 @@ public class MessageHandler implements Runnable {
         Storage storage = Peer.getStorage();
 
         String chunkName = fileId + "_" + chunkNum;
-
-        storage.updateHashmap(chunkName, 1);
+        storage.updateHashmap(chunkName, senderId);
     }
 
     private void handleGetChunk() {
@@ -134,14 +130,11 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Chunk!");
 
         // arguments
-        String version = args[1];
-        String senderId = args[2];
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
-        //byte[] data = body.getBytes();
         Chunk chunk = new Chunk(fileId,chunkNum,body,0);
-
+        
         Storage storage = Peer.getStorage();
         storage.addRestoredChunk(chunk);
     }
