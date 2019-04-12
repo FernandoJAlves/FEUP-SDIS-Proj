@@ -135,7 +135,7 @@ public class Storage implements Serializable {
         if (currReplicationDgr < chunk.getDesiredRepDgr()) {
             storedChunks.add(chunk);
             // update current replication degree
-            updateHashmap(chunkName, peerId);
+            insertInReplicationMap(chunkName, peerId);
             // store chunk locally
             chunk.write();
             // decrease peer available space
@@ -167,7 +167,7 @@ public class Storage implements Serializable {
         storedChunks.remove(index);
     }
 
-    public void updateHashmap(String chunkName, int peerId) {
+    public void insertInReplicationMap(String chunkName, int peerId) {
         ArrayList<Integer> peerList;
         if (replicationHashmap.containsKey(chunkName)) {
             peerList = replicationHashmap.get(chunkName);
@@ -178,6 +178,17 @@ public class Storage implements Serializable {
             peerList.add(peerId);
         }
         replicationHashmap.put(chunkName, peerList);
+    }
+
+	public void removeFromReplicationMap(String chunkName, int peerId) {
+        if (replicationHashmap.containsKey(chunkName)) {
+            ArrayList<Integer> peerList = replicationHashmap.get(chunkName);
+            if (peerList.contains(peerId)) {
+                System.out.println("removed from map!");
+                peerList.remove(peerId);
+            }
+            replicationHashmap.put(chunkName, peerList);
+        }
     }
 
     public void deleteChunks(String fileId) {
