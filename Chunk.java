@@ -1,12 +1,14 @@
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
 public class Chunk implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     private String fileId;
     private int chunkNum;
     private int desiredRepDgr;
@@ -16,7 +18,7 @@ public class Chunk implements Serializable {
         this.fileId = fileId;
         this.chunkNum = chunkNum;
         this.data = data;
-        this.desiredRepDgr = desiredRepDgr; 
+        this.desiredRepDgr = desiredRepDgr;
     }
 
     public String getFileId() {
@@ -39,10 +41,33 @@ public class Chunk implements Serializable {
         return fileId + "_" + chunkNum;
     }
 
-    public void write() {
-         // create chunk file on peer directory
-         String fileDir = "peer" + Peer.getId() + "/backup/" + getFileId();
+    public byte[] read() {
+        String path = "peer" + Peer.getId() + "/backup/" + getFileId() + "/" + chunkNum;
         
+        File file = new File(path);
+        if (!file.exists()) {
+            return null;
+        }
+        
+        byte[] buf = new byte[(int) file.length()];
+
+        try (FileInputStream fileStream = new FileInputStream(path)) {
+            fileStream.read(buf);
+            fileStream.close();
+        } catch(FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        return buf;
+    }
+
+    public void write() {
+        // create chunk file on peer directory
+        String fileDir = "peer" + Peer.getId() + "/backup/" + getFileId();
+
         File dir = new File(fileDir);
         if (!dir.exists()) {
             dir.mkdirs();

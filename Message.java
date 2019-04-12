@@ -189,7 +189,7 @@ public class Message {
 
     public static byte[] getChunkMessage(Chunk chunk) {
         String header = mes_chunk(Peer.getVersion(), Peer.getId(), chunk.getFileId(), chunk.getNum());
-        return mes_addBody(header, chunk.getData());
+        return mes_addBody(header, chunk.read());
     }
 
 /*
