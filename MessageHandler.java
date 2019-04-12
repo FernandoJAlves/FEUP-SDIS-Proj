@@ -75,8 +75,6 @@ public class MessageHandler implements Runnable {
 
         byte[] data = body.getBytes();    
 
-        System.out.println(Arrays.toString(this.args));
-
         Chunk chunk = new Chunk(fileId, chunkNum, data, desiredRepDgr);
         
         if (storage.saveChunk(chunk)) {
@@ -99,7 +97,6 @@ public class MessageHandler implements Runnable {
         Storage storage = Peer.getStorage();
 
         String chunkName = fileId + "_" + chunkNum;
-        System.out.println("chunkName = " + chunkName);
         
         storage.updateHashmap(chunkName,1);
     }

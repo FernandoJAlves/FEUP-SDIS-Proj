@@ -48,13 +48,6 @@ public class Storage implements Serializable {
         return getChunk(fileId + "_" + chunkNum);
     }
 
-    public synchronized int getChunkRepDgr(String chunkName) {
-        if (replicationHashmap.contains(chunkName)) {
-            return replicationHashmap.get(chunkName);
-        }
-        return 0;
-    }
-
     public boolean isFileOwner(String fileId) {
         for (FileManager file : localFiles) {
             if (file.getHashedFileId().equals(fileId)) {
@@ -110,6 +103,14 @@ public class Storage implements Serializable {
             System.out.println("WARNING: max replication degree already reached!");
             return;
         }
+    }
+
+    public synchronized int getChunkRepDgr(String chunkName) {
+        if (replicationHashmap.containsKey(chunkName)) {
+            int ret = replicationHashmap.get(chunkName);
+            return ret;
+        }
+        return 0;
     }
 
     public synchronized void updateHashmap(String chunkName, int repDgrOffset) {

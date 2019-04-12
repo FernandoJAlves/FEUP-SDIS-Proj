@@ -32,7 +32,8 @@ public class MessageSenderPutChunk implements Runnable {
                 Peer.getChannel(channel).send(message);
                 attemptCount++; //next attempt
                 waitInt *= 2;
-                System.out.println("Attempt Number: " + attemptCount);
+                //System.out.println("Attempt Number: " + attemptCount);
+                //System.out.println("CurrRepDgr = " + knownRepDeg);
                 //System.out.println(waitInt);
                 Peer.getThreadPool().schedule(this, (int)waitInt, TimeUnit.SECONDS);
             }
