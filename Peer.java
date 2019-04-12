@@ -181,6 +181,6 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void state() {
-
+        System.out.println(storage);
     }
 }
