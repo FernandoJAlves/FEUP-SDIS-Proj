@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Storage implements Serializable {
@@ -149,11 +150,11 @@ public class Storage implements Serializable {
 
     public void deleteChunks(String fileId) {
         String dirPath = "peer" + Peer.getId() + "/backup/" + fileId;
-
+    
+        List<Chunk> foundChunks = new ArrayList<Chunk>();
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
-                // erase chunk from chunks list
-                storedChunks.remove(chunk);
+                foundChunks.add(chunk);
                 // erase chunk from replication map
                 replicationHashmap.remove(chunk.getName());
                 // increase peer available space
@@ -164,7 +165,9 @@ public class Storage implements Serializable {
                 file.delete();
             }
         }
-        
+        // erase chunks from stored chunks
+        storedChunks.removeAll(foundChunks);
+
         // delete empty directory
         File dir = new File(dirPath);
         if (dir.exists()) {
