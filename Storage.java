@@ -41,6 +41,14 @@ public class Storage implements Serializable {
         return availableSpace;
     }
 
+    public synchronized int getOccupiedSpace() {
+        int occupiedSpace = 0;
+        for (Chunk chunk : storedChunks) {
+            occupiedSpace += chunk.getData().length;
+        }
+        return occupiedSpace;
+    }
+
     public void addFile(FileManager file) {
         if (!localFiles.contains(file)) {
             localFiles.add(file);
@@ -72,6 +80,10 @@ public class Storage implements Serializable {
             }
         }
         return null;
+    }
+
+    public Chunk getChunk(int index) {
+        return storedChunks.get(index);
     }
 
     public Chunk getChunk(String name) {
@@ -123,7 +135,7 @@ public class Storage implements Serializable {
         if (currReplicationDgr < chunk.getDesiredRepDgr()) {
             storedChunks.add(chunk);
             // update current replication degree
-            updateHashmap(chunkName, peerId);
+            insertInReplicationMap(chunkName, peerId);
             // store chunk locally
             chunk.write();
             // decrease peer available space
@@ -134,20 +146,54 @@ public class Storage implements Serializable {
         }
     }
 
-    public void updateHashmap(String chunkName, int peerId) {
+    public void removeChunk(int index) {
+        if (index > storedChunks.size()) {
+            System.out.println("Error: invalid chunk position!");
+            return;
+        }
+
+        // erase file from filesystem
+        Chunk chunk = getChunk(index);
+        chunk.delete();
+
+        // delete if empty directory
+        String dirPath = "peer" + Peer.getId() + "/backup/" + chunk.getFileId();
+        File dir = new File(dirPath);
+        if (dir.exists() && dir.list().length == 0) {
+            dir.delete();
+        }
+
+        // remove chunk from stored chunks
+        storedChunks.remove(index);
+    }
+
+    public void insertInReplicationMap(String chunkName, int peerId) {
         ArrayList<Integer> peerList;
         if (replicationHashmap.containsKey(chunkName)) {
             peerList = replicationHashmap.get(chunkName);
         } else {
             peerList = new ArrayList<Integer>();
         }
-        peerList.add(peerId);
+        if (!peerList.contains(peerId)) {
+            peerList.add(peerId);
+        }
         replicationHashmap.put(chunkName, peerList);
+    }
+
+	public void removeFromReplicationMap(String chunkName, int peerId) {
+        if (replicationHashmap.containsKey(chunkName)) {
+            ArrayList<Integer> peerList = replicationHashmap.get(chunkName);
+            if (peerList.contains(peerId)) {
+                System.out.println("removed from map!");
+                peerList.remove(peerId);
+            }
+            replicationHashmap.put(chunkName, peerList);
+        }
     }
 
     public void deleteChunks(String fileId) {
         String dirPath = "peer" + Peer.getId() + "/backup/" + fileId;
-    
+
         List<Chunk> foundChunks = new ArrayList<Chunk>();
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
@@ -167,7 +213,7 @@ public class Storage implements Serializable {
 
         // delete empty directory
         File dir = new File(dirPath);
-        if (dir.exists()) {
+        if (dir.exists() && dir.list().length == 0) {
             dir.delete();
         }
     }

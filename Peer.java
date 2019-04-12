@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.Random;
 import java.util.concurrent.Executors;
 
 /**
@@ -113,7 +114,6 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             byte[] message = Message.getPutchunkMessage(chunk);
-            ;
             MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
                     replicationDeg);
             threadpool.execute(sender);
@@ -156,14 +156,29 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
-            threadpool.execute(sender);
+            for(int i = 0; i < 5; i++){ //Sends delete 5 times
+                MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+                threadpool.schedule(sender, i, TimeUnit.SECONDS);
+            }
         }
     }
 
     // @Override
     public void reclaim(int maxDiskSpace) {
+        Storage storage = Peer.getStorage();
 
+        Random seed = new Random();
+        while (storage.getOccupiedSpace() > maxDiskSpace) {
+            int index = seed.nextInt(storage.getStoredChunks().size());
+            String fileId = storage.getChunk(index).getFileId();
+            int chunkNum = storage.getChunk(index).getNum();
+            // remove chunk from stored chunks
+            storage.removeChunk(index);
+            // send removed message
+            String message = Message.mes_removed(Peer.getVersion(), Peer.getId(), fileId, chunkNum);
+            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+            threadpool.execute(sender);
+        }
     }
 
     // @Override
@@ -193,6 +208,9 @@ public class Peer implements RemoteInterface {
             System.out.println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
         }
 
-        System.out.println("\n=================\nPeer Max Size: " + storage.getAvailableSpace() + " bytes\n=================");
+        System.out.println("\n=================");
+        System.out.println("Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace())/1000.0 + " KBytes");
+        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace())/1000.0 + " KBytes");
+        System.out.println("=================");
     }
 }

@@ -104,7 +104,7 @@ public class MessageHandler implements Runnable {
         Storage storage = Peer.getStorage();
 
         String chunkName = fileId + "_" + chunkNum;
-        storage.updateHashmap(chunkName, senderId);
+        storage.insertInReplicationMap(chunkName, senderId);
     }
 
     private void handleGetChunk() {
@@ -142,9 +142,7 @@ public class MessageHandler implements Runnable {
     private void handleDelete() {
         System.out.println("Received Delete!");
 
-        // Arguments
-        String version = args[1];
-        String senderId = args[2];
+        // arguments
         String fileId = args[3];
 
         Storage storage = Peer.getStorage();
@@ -154,12 +152,20 @@ public class MessageHandler implements Runnable {
     private void handleRemoved() {
         System.out.println("Received Removed!");
 
-        // Arguments
+        // arguments
         String version = args[1];
         String senderId = args[2];
         String fileId = args[3];
-        String chunkNo = args[4];
+        int chunkNum = Integer.parseInt(args[4]);
 
-        // TODO: Storage logic
+        Storage storage = Peer.getStorage();
+
+        // if peer has chunk
+        String chunkName = fileId + "_" + chunkNum;
+        if (storage.getChunk(chunkName) != null) {
+            // remove from replication map
+            storage.removeFromReplicationMap(chunkName, Peer.getId());
+            // TODO: initiate putchunk protocol
+        }
     }
 }
