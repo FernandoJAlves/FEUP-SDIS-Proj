@@ -50,7 +50,8 @@ public class Peer implements RemoteInterface {
         Utils.loadStorage();
 
         // schedule storage serialization
-        SaveDataToFile saver = new SaveDataToFile(); //Saves map to file every 10 seconds //TODO: If class does not do anything else, remove it and just create a runnable
+        SaveDataToFile saver = new SaveDataToFile(); // Saves map to file every 10 seconds //TODO: If class does not do
+                                                     // anything else, remove it and just create a runnable
         threadpool.scheduleAtFixedRate(saver, 10, 10, TimeUnit.SECONDS);
     }
 
@@ -111,7 +112,8 @@ public class Peer implements RemoteInterface {
         storage.addFile(file);
 
         for (Chunk chunk : file.getChunkList()) {
-            byte[] message = Message.getPutchunkMessage(chunk);;
+            byte[] message = Message.getPutchunkMessage(chunk);
+            ;
             MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
                     replicationDeg);
             threadpool.execute(sender);
@@ -135,9 +137,15 @@ public class Peer implements RemoteInterface {
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.execute(sender);
         }
- 
-        // aggregate all restored chunks
-        Utils.aggregateChunks(filepath, hashedFileId);
+
+        try {
+            Thread.sleep(1000); // TODO: justify waiting time
+            // aggregate all restored chunks 
+            Utils.aggregateChunks(filepath, hashedFileId);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         // clear requested chunks
         storage.getRestoredChunks().clear();
     }

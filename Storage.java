@@ -49,10 +49,11 @@ public class Storage implements Serializable {
 
     public void addRestoredChunk(Chunk chunk) {
         for (Chunk c : restoredChunks) {
-            if (!chunk.getName().equals(c.getName())) {
-                restoredChunks.add(c);
+            if (chunk.getName().equals(c.getName())) {
+                return;
             }
         }
+        restoredChunks.add(chunk);
     }
 
     public boolean isFileOwner(String fileId) {
