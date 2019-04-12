@@ -38,7 +38,7 @@ public class Utils {
 
     public static void saveStorage() {
         try {
-            String dirPath = "Backup/" + Peer.getId();
+            String dirPath = "peer" + Peer.getId();
             File dir = new File(dirPath);
             if (!dir.exists()) {
                 dir.mkdirs();
@@ -56,7 +56,7 @@ public class Utils {
 
     public static void loadStorage() {
         try {
-            String path = "Backup/" + Peer.getId() + "/storage.ser";
+            String path = "peer" + Peer.getId() + "/storage.ser";
 
             File file = new File(path);
             if (file.exists()) {

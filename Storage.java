@@ -8,13 +8,14 @@ public class Storage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private ArrayList<FileManager> localFiles;
-    private ArrayList<Chunk> storedChunks;
+    private ArrayList<Chunk> storedChunks, restoredChunks;
     private ConcurrentHashMap<String, Integer> replicationHashmap;
     private int availableSpace;
 
     public Storage() {
         localFiles = new ArrayList<FileManager>();
         storedChunks = new ArrayList<Chunk>();
+        restoredChunks = new ArrayList<Chunk>();
         replicationHashmap = new ConcurrentHashMap<String, Integer>();
         availableSpace = 100000000; // 100 MB
     }
@@ -27,12 +28,51 @@ public class Storage implements Serializable {
         return storedChunks;
     }
 
+    public ArrayList<Chunk> getRestoredChunks() {
+        return restoredChunks;
+    }
+
     public synchronized ConcurrentHashMap<String, Integer> getReplicationHashmap() {
         return replicationHashmap;
     }
 
     public synchronized int getAvailableSpace() {
         return availableSpace;
+    }
+
+    public void addFile(FileManager file) {
+        if (!localFiles.contains(file)) {
+            localFiles.add(file);
+        }
+    }
+
+    public void addRestoredChunk(Chunk chunk) {
+        /*if (!restoredChunks.contains(chunk)) {
+            restoredChunks.add(chunk);
+        }*/
+        for (Chunk c : restoredChunks) {
+            if (!chunk.getName().equals(c.getName())) {
+                restoredChunks.add(c);
+            }
+        }
+    }
+
+    public boolean isFileOwner(String fileId) {
+        for (FileManager file : localFiles) {
+            if (file.getHashedFileId().equals(fileId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public FileManager getLocalFile(String name) {
+        for (FileManager fm : localFiles) {
+            if (fm.getHashedFileId().equals(name)) {
+                return fm;
+            }
+        }
+        return null;
     }
 
     public Chunk getChunk(String name) {
@@ -48,23 +88,14 @@ public class Storage implements Serializable {
         return getChunk(fileId + "_" + chunkNum);
     }
 
-    public boolean isFileOwner(String fileId) {
-        for (FileManager file : localFiles) {
-            if (file.getHashedFileId().equals(fileId)) {
-                return true;
-            }
+    public int getChunkRepDgr(String chunkName) {
+        if (replicationHashmap.contains(chunkName)) {
+            return replicationHashmap.get(chunkName);
         }
-        return false;
+        return 0;
     }
 
-    public void addFile(FileManager file) {
-        if (!localFiles.contains(file)) {
-            localFiles.add(file);
-        }
-    }
-
-    // thread-safe method
-    public synchronized boolean saveChunk(Chunk chunk) {
+    public boolean saveChunk(Chunk chunk) {
         int chunkSize = chunk.getData().length;
 
         // check available storage
@@ -84,7 +115,7 @@ public class Storage implements Serializable {
         return true;
     }
 
-    private synchronized void writeChunk(Chunk chunk) {
+    private void writeChunk(Chunk chunk) {
         String chunkName = chunk.getName();
 
         // setup chunk in replication map
@@ -105,21 +136,7 @@ public class Storage implements Serializable {
         }
     }
 
-    public synchronized int getChunkRepDgr(String chunkName) {
-        if (replicationHashmap.containsKey(chunkName)) {
-            int ret = replicationHashmap.get(chunkName);
-            return ret;
-        }
-        return 0;
-    }
-
-    public synchronized void updateHashmap(String chunkName, int repDgrOffset) {
-
-        /*System.out.println("---HASHMAP---");
-        for (String name : replicationHashmap.keySet()) {
-            System.out.println(name + " " + replicationHashmap.get(name));
-        }*/
-
+    public void updateHashmap(String chunkName, int repDgrOffset) {
         if (Math.abs(repDgrOffset) > 1) {
             System.out.println("Error: repDgrOffset is invalid!");
             return;
@@ -134,24 +151,25 @@ public class Storage implements Serializable {
     }
 
     public void deleteChunks(String fileId) {
-        String dirPath = "Backup" + "/" + Peer.getId() + "/" + fileId;
-        System.out.println("In delete: " + this.storedChunks.size());
+        String dirPath = "peer" + Peer.getId() + "/backup/" + fileId;
+
         for (Chunk chunk : storedChunks) {
             if (chunk.getFileId().equals(fileId)) {
                 // erase chunk from chunks list
                 storedChunks.remove(chunk);
                 // erase chunk from replication map
                 replicationHashmap.remove(chunk.getName());
+                // increase peer available space
+                availableSpace += chunk.getData().length;
                 // erase file from peer directory
                 String filepath = dirPath + "/" + chunk.getNum();
                 File file = new File(filepath);
-                System.out.println(filepath);
                 file.delete();
-                // increase peer available space
-                availableSpace += chunk.getData().length;
             }
         }
-        File dir = new File(dirPath);  //TODO: Ver se pinta \/
+        
+        // delete empty directory
+        File dir = new File(dirPath);
         if (dir.exists()) {
             dir.delete();
         }

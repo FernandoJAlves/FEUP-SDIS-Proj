@@ -40,8 +40,8 @@ public class Chunk implements Serializable {
     }
 
     public void write() {
-        // create chunk file on peer directory
-        String fileDir = "Backup" + "/" + Peer.getId() + "/" + getFileId();
+         // create chunk file on peer directory
+         String fileDir = "peer" + Peer.getId() + "/backup" + "/" + getFileId();
         
         File dir = new File(fileDir);
         if (!dir.exists()) {
