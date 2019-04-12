@@ -47,9 +47,6 @@ public class Storage implements Serializable {
     }
 
     public void addRestoredChunk(Chunk chunk) {
-        /*if (!restoredChunks.contains(chunk)) {
-            restoredChunks.add(chunk);
-        }*/
         for (Chunk c : restoredChunks) {
             if (!chunk.getName().equals(c.getName())) {
                 restoredChunks.add(c);

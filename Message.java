@@ -1,7 +1,4 @@
 import java.io.IOException;
-import java.net.*;
-import java.security.MessageDigest;
-import java.nio.charset.StandardCharsets;
 import static java.lang.Math.pow;
 
 public class Message {
@@ -123,14 +120,6 @@ public class Message {
                 + "\r\n\r\n";
     }
 
-    public static String mes_addBody(String message, byte[] body) {
-        System.out.println(" - MES Header Size: " + message.length());
-        System.out.println(" - MES Body Size: " + body.length);
-        String ret = message + new String(body, 0, body.length);
-        System.out.println(" - MES Ret Size: " + ret.length());
-        return ret;
-    }
-
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
     public static String mes_stored(String version, String id, String fileId, int chunkNo) {
         // TODO: check all of the input values
@@ -147,15 +136,30 @@ public class Message {
     }
 
     // GETCHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
-    public static String mes_getchunk(String version, String senderId, String fileId, String chunkNo) {
+    public static String mes_getchunk(String version, String senderId, String fileId, int chunkNo) {
 
-        return "GETCHUNK";
+        String finalVersion;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "GETCHUNK " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + " " + chunkNo
+                + "\r\n\r\n";
     }
 
     // CHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF><Body>
-    public static String mes_chunk(String version, String senderId, String fileId, String chunkNo, String body) {
+    public static String mes_chunk(String version, String senderId, String fileId, int chunkNo) {
 
-        return "CHUNK";
+        String finalVersion;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "CHUNK " + finalVersion + " " + Integer.parseInt(senderId) + " " + fileId + " " + chunkNo + "\r\n\r\n";
     }
 
     // DELETE <Version> <SenderId> <FileId> <CRLF><CRLF>
@@ -176,5 +180,35 @@ public class Message {
     public static String mes_removed(String version, String senderId, String fileId, String chunkNo) {
 
         return "REMOVED";
+    }
+
+    public static byte[] getPutchunkMessage(Chunk chunk) {
+        String header = mes_putchunk(Peer.getVersion(), Peer.getId(), chunk.getFileId(), chunk.getNum(), chunk.getDesiredRepDgr()); 
+        return mes_addBody(header, chunk.getData());
+    }
+
+    public static byte[] getChunkMessage(Chunk chunk) {
+        String header = mes_chunk(Peer.getVersion(), Peer.getId(), chunk.getFileId(), chunk.getNum());
+        return mes_addBody(header, chunk.getData());
+    }
+
+/*
+    public static String mes_addBody(String message, byte[] body) {
+        System.out.println(" - MES Header Size: " + message.length());
+        System.out.println(" - MES Body Size: " + body.length);
+        String ret = message + new String(body, 0, body.length);
+        System.out.println(" - MES Ret Size: " + ret.length());
+        return ret;
+    }
+*/
+
+    public static byte[] mes_addBody(String msg, byte[] body) {
+        byte[] header = msg.getBytes();
+
+        byte[] message = new byte[header.length + body.length];
+        System.arraycopy(header, 0, message, 0, header.length);
+        System.arraycopy(body, 0, message, header.length, body.length);
+
+        return message;
     }
 }

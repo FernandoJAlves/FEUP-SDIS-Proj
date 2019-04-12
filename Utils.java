@@ -6,6 +6,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -36,6 +44,50 @@ public class Utils {
         return hexString.toString();
     }
 
+    public static void aggregateChunks(String filepath, String hashedFileId) {
+        Storage storage = Peer.getStorage();
+
+        // get restored chunks for desired file
+        ArrayList<Chunk> restoredChunks = storage.getRestoredChunks();
+
+        Predicate<Chunk> byName = chunk -> chunk.getFileId().equals(hashedFileId);
+        List<Chunk> fileChunks = restoredChunks.stream().filter(byName).collect(Collectors.<Chunk>toList());
+
+        Collections.sort(fileChunks, new Comparator<Chunk>() {
+            public int compare(Chunk c1, Chunk c2) {
+                return c1.getNum() - c2.getNum();
+            }
+        });
+
+        try {
+            // create chunk file on peer directory
+            String fileDir = "peer" + Peer.getId() + "/restored";
+            File dir = new File(fileDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            // create restored file
+            String path = fileDir + "/" + filepath;
+            File file = new File(path);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileOutputStream stream = new FileOutputStream(path);
+            for (Chunk chunk : fileChunks) {
+                byte[] data = chunk.getData();
+                if (data != null) {
+                    stream.write(data);
+                }
+            }
+            stream.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     public static void saveStorage() {
         try {
             String dirPath = "peer" + Peer.getId();
@@ -43,7 +95,6 @@ public class Utils {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-
             FileOutputStream fileOut = new FileOutputStream(dirPath + "/storage.ser");
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             out.writeObject(Peer.getStorage());

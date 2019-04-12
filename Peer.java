@@ -2,6 +2,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import static java.util.concurrent.TimeUnit.*;
+
+import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
@@ -61,6 +63,10 @@ public class Peer implements RemoteInterface {
         mdr = new Channel(args[7], Integer.parseInt(args[8]));
     }
 
+    public static String getVersion() {
+        return protocolVersion;
+    }
+
     public static Channel getChannel(String channel) {
         // TODO: Remove prints, just for testing
         if (channel == "MC") {
@@ -99,26 +105,13 @@ public class Peer implements RemoteInterface {
         storage = s;
     }
 
-    public byte[] getByteMessage(Chunk chunk) {
-        String header = Message.mes_putchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum(),
-                chunk.getDesiredRepDgr());
-        String headerData = Message.mes_addBody(header, chunk.getData());
-        byte[] message = new byte[headerData.length()];
-
-        //System.out.println(" - PEER Chunk Size: " + chunk.getData().length);
-        //System.out.println(" - PEER Message1 Size: " + message.length);
-        System.arraycopy(headerData.getBytes(), 0, message, 0, headerData.length());
-        //System.out.println(" - PEER Message2 Size: " + message.length);
-        return message;
-    }
-
     // @Override
     public void backup(String filepath, int replicationDeg) {
         FileManager file = new FileManager(filepath, replicationDeg);
         storage.addFile(file);
 
         for (Chunk chunk : file.getChunkList()) {
-            byte[] message = getByteMessage(chunk);
+            byte[] message = Message.getPutchunkMessage(chunk);;
             MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
                     replicationDeg);
             threadpool.execute(sender);
@@ -127,7 +120,26 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void restore(String filepath) {
+        File file = new File(filepath);
+        String finalFileId = filepath + file.lastModified();
+        String hashedFileId = Utils.bytesToHex(Utils.encodeSHA256(finalFileId));
 
+        FileManager fm = storage.getLocalFile(hashedFileId);
+        if (fm == null) {
+            System.out.println("Error: file wasn't asked for backup!");
+            return;
+        }
+
+        for (Chunk chunk : fm.getChunkList()) {
+            String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
+            MessageSender sender = new MessageSender("MC", message.getBytes());
+            threadpool.execute(sender);
+        }
+ 
+        // aggregate all restored chunks
+        Utils.aggregateChunks(filepath, hashedFileId);
+        // clear requested chunks
+        storage.getRestoredChunks().clear();
     }
 
     // @Override
@@ -136,9 +148,6 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            // MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB",message,
-            // chunk.getFileId(), chunk.getNum(), replicationDeg);
-            System.out.println("Sent Delete: " + message);
             MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }
