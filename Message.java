@@ -124,7 +124,11 @@ public class Message {
     }
 
     public static String mes_addBody(String message, byte[] body) {
-        return message + new String(body, 0, body.length);
+        System.out.println(" - MES Header Size: " + message.length());
+        System.out.println(" - MES Body Size: " + body.length);
+        String ret = message + new String(body, 0, body.length);
+        System.out.println(" - MES Ret Size: " + ret.length());
+        return ret;
     }
 
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>

@@ -104,7 +104,11 @@ public class Peer implements RemoteInterface {
                 chunk.getDesiredRepDgr());
         String headerData = Message.mes_addBody(header, chunk.getData());
         byte[] message = new byte[headerData.length()];
+
+        //System.out.println(" - PEER Chunk Size: " + chunk.getData().length);
+        //System.out.println(" - PEER Message1 Size: " + message.length);
         System.arraycopy(headerData.getBytes(), 0, message, 0, headerData.length());
+        //System.out.println(" - PEER Message2 Size: " + message.length);
         return message;
     }
 
