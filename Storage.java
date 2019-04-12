@@ -89,7 +89,7 @@ public class Storage implements Serializable {
     }
 
     public int getChunkRepDgr(String chunkName) {
-        if (replicationHashmap.contains(chunkName)) {
+        if (replicationHashmap.containsKey(chunkName)) {
             return replicationHashmap.get(chunkName);
         }
         return 0;
