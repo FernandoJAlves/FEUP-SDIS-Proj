@@ -173,9 +173,16 @@ public class Message {
     }
 
     // REMOVED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
-    public static String mes_removed(String version, String senderId, String fileId, String chunkNo) {
+    public static String mes_removed(String version, int senderId, String fileId, int chunkNo) {
 
-        return "REMOVED";
+        String finalVersion;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "REMOVED " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + "\r\n\r\n";
     }
 
     public static byte[] getPutchunkMessage(Chunk chunk) {

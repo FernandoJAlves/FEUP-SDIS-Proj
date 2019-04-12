@@ -89,4 +89,13 @@ public class Chunk implements Serializable {
             }
         }
     }
+
+    public void delete() {
+        String path = "peer" + Peer.getId() + "/backup/" + getFileId() + "/" + chunkNum;
+
+        File file = new File(path);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
 }

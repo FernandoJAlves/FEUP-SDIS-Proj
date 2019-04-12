@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.Random;
 import java.util.concurrent.Executors;
 
 /**
@@ -113,7 +114,6 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             byte[] message = Message.getPutchunkMessage(chunk);
-            ;
             MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
                     replicationDeg);
             threadpool.execute(sender);
@@ -163,7 +163,20 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void reclaim(int maxDiskSpace) {
+        Storage storage = Peer.getStorage();
 
+        Random seed = new Random();
+        while (storage.getOccupiedSpace() > maxDiskSpace) {
+            int index = seed.nextInt(storage.getStoredChunks().size());
+            String fileId = storage.getChunk(index).getFileId();
+            int chunkNum = storage.getChunk(index).getNum();
+            // remove chunk from stored chunks
+            storage.removeChunk(index);
+            // send removed message
+            String message = Message.mes_removed(Peer.getVersion(), Peer.getId(), fileId, chunkNum);
+            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+            threadpool.execute(sender);
+        }
     }
 
     // @Override
