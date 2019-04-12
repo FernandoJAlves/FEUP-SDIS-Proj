@@ -1,19 +1,30 @@
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class MessageHandler implements Runnable {
-    private String body;
+    private byte[] body;
     private String[] args;
 
-    public MessageHandler(byte[] message) {
-        String messageStr = new String(message, 0, message.length);
+    public MessageHandler(byte[] message, int msg_size) {
 
-        String[] headerBody = splitHeaderBody(messageStr);
-        this.args = makeArrayArgs(headerBody[0]);
+        String messageStr = new String(message, 0, msg_size);
 
-        if (headerBody.length > 1) {
-            this.body = headerBody[1];
+        int indexCRLF = messageStr.indexOf("\r\n\r\n");
+
+        byte[] header = new byte[indexCRLF];
+        int bodySize = msg_size-(indexCRLF+4);
+        byte[] body = new byte[bodySize]; //Plus 4 to count all the chars in CRLF
+        System.arraycopy(message, 0, header, 0, indexCRLF);
+        System.arraycopy(message, indexCRLF+4, body, 0, bodySize);
+
+        String headerStr = new String(header);
+
+        this.args = makeArrayArgs(headerStr);
+
+        if (bodySize > 0) {
+            this.body = body;
         }
     }
 
@@ -72,8 +83,9 @@ public class MessageHandler implements Runnable {
         // retrieve local storage
         Storage storage = Peer.getStorage();
 
-        byte[] data = body.getBytes();
-        Chunk chunk = new Chunk(fileId, chunkNum, data, desiredRepDgr);
+        //byte[] data = body.getBytes();
+        //System.out.println(" - MES_HAND Body Size: " + data.length);
+        Chunk chunk = new Chunk(fileId, chunkNum, body, desiredRepDgr);
 
         if (storage.saveChunk(chunk)) {
             // send stored message
@@ -127,8 +139,8 @@ public class MessageHandler implements Runnable {
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
-        byte[] data = body.getBytes();
-        Chunk chunk = new Chunk(fileId,chunkNum,data,0);
+        //byte[] data = body.getBytes();
+        Chunk chunk = new Chunk(fileId,chunkNum,body,0);
 
         Storage storage = Peer.getStorage();
         storage.addRestoredChunk(chunk);

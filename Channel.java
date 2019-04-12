@@ -52,9 +52,11 @@ public class Channel implements Runnable {
 
                 // receive request
                 multicastSocket.receive(packet);
+
+                //System.out.println(" - CHANNEL Received Pac Size: " + packet.getLength());
     
                 // process request
-                Peer.getThreadPool().execute(new MessageHandler(packet.getData()));
+                Peer.getThreadPool().execute(new MessageHandler(packet.getData(), packet.getLength()));
             }
         } catch (IOException e) {
             // TODO Auto-generated catch block

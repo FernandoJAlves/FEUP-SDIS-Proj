@@ -203,12 +203,14 @@ public class Message {
 */
 
     public static byte[] mes_addBody(String msg, byte[] body) {
+        System.out.println(" - MES Mes Size: " + msg.length());
         byte[] header = msg.getBytes();
-
+        System.out.println(" - MES Header Size: " + header.length);
+        System.out.println(" - MES Body Size: " + body.length);
         byte[] message = new byte[header.length + body.length];
         System.arraycopy(header, 0, message, 0, header.length);
         System.arraycopy(body, 0, message, header.length, body.length);
-
+        System.out.println(" - MES Return Size: " + message.length);
         return message;
     }
 }
