@@ -14,7 +14,6 @@ run_j_cmd () {
         1)
             echo "java Client localhost peer_1 BACKUP qwerty.txt 1"
             java Client localhost peer_1 BACKUP qwerty.txt 1
-            # java Client 10.227.161.31 peer_1 BACKUP penguin.jpg 1
         ;;
         2)
             echo "java Client localhost peer_1 DELETE qwerty.txt"

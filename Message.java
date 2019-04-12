@@ -192,6 +192,16 @@ public class Message {
         return mes_addBody(header, chunk.getData());
     }
 
+/*
+    public static String mes_addBody(String message, byte[] body) {
+        System.out.println(" - MES Header Size: " + message.length());
+        System.out.println(" - MES Body Size: " + body.length);
+        String ret = message + new String(body, 0, body.length);
+        System.out.println(" - MES Ret Size: " + ret.length());
+        return ret;
+    }
+*/
+
     public static byte[] mes_addBody(String msg, byte[] body) {
         byte[] header = msg.getBytes();
 
