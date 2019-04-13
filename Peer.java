@@ -141,16 +141,16 @@ public class Peer implements RemoteInterface {
             threadpool.execute(sender);
         }
 
-        try {
-            Thread.sleep(1000); // TODO: justify waiting time
-            // aggregate all restored chunks 
-            Utils.aggregateChunks(filepath, hashedFileId);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        // clear requested chunks
-        storage.getRestoredChunks().clear();
+        // aggregate chunks after a second of delay
+        threadpool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                // aggregate all restored chunks 
+                Utils.aggregateChunks(filepath, hashedFileId);
+                // clear requested chunks
+                storage.getRestoredChunks().clear();
+            }
+        }, 1, TimeUnit.SECONDS);
     }
 
     // @Override
