@@ -1,3 +1,10 @@
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
@@ -125,6 +132,7 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Getchunk!");
 
         // arguments
+        String version = args[1];
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
@@ -135,9 +143,37 @@ public class MessageHandler implements Runnable {
         // send chunk message
         byte[] message = Message.getChunkMessage(chunk);
 
-        MessageSender sender = new MessageSender("MDR", message); // send message through MDR
-        int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms
-        Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
+        switch (version) {
+        case "1.0":
+            MessageSender sender = new MessageSender("MDR", message); // send message through MDR
+            int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms
+            Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
+            break;
+        case "2.0":
+            // create tcp/ip client
+            Socket socket;
+            DataOutputStream out;
+            try {
+                socket = new Socket("localhost", 8090);
+                System.out.println("Connected");
+                // sends output to the socket 
+                out = new DataOutputStream(socket.getOutputStream());
+                // send chunk message
+                out.write(message);
+                // close connection
+                out.close(); 
+                socket.close();
+            } catch (UnknownHostException e1) {
+                // TODO Auto-generated catch b lock
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            break;
+        default:
+            break;
+        }        
     }
 
     private void handleChunk() {
@@ -150,7 +186,7 @@ public class MessageHandler implements Runnable {
         Chunk chunk = new Chunk(fileId, chunkNum, body, 0);
 
         Storage storage = Peer.getStorage();
-        storage.addRestoredChunk(chunk);
+        storage.addRestoredChunk(chunk);   
     }
 
     private void handleDelete() {

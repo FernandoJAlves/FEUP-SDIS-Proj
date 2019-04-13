@@ -153,6 +153,36 @@ public class Peer implements RemoteInterface {
         }, 1, TimeUnit.SECONDS);
     }
 
+    /*
+       // initiate tcp/ip server
+                try {
+                    ServerSocket server = new ServerSocket(8090);
+                    System.out.println("Server started"); 
+      
+                    System.out.println("Waiting for a client ..."); 
+          
+                    Socket socket = server.accept(); 
+                    System.out.println("Client accepted"); 
+                    server.close();
+    
+                    // takes input from the client socket 
+                    DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream())); 
+    
+                    byte[] chunkMsg = new byte[65000];
+                    in.read(chunkMsg);
+                    System.out.println(chunkMsg.toString());
+    
+                    System.out.println("Closing connection"); 
+      
+                    // close connection 
+                    socket.close(); 
+                    in.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+    */
+
     // @Override
     public void delete(String pathname) {
         FileManager file = new FileManager(pathname, 0);
@@ -189,11 +219,9 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void state() {
-        System.out.println(storage.getReplicationHashmap());
-
         System.out.println("=================\nFiles Backed up:");
 
-        for(FileManager f : storage.getLocalFiles()){
+        for(FileManager f : storage.getLocalFiles()) {
             System.out.println();
             System.out.println("     - Filename: " + f.getPathname());
             System.out.println("     - Hashed Id: " + f.getHashedFileId());

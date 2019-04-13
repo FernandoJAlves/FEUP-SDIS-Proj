@@ -54,9 +54,12 @@ public class Storage implements Serializable {
     }
 
     public void addFile(FileManager file) {
-        if (!localFiles.contains(file)) {
-            localFiles.add(file);
+        for (FileManager fm : localFiles) {
+            if (fm.getHashedFileId().equals(file.getHashedFileId())) {
+                return;
+            }
         }
+        localFiles.add(file); 
     }
 
     public void addRestoredChunk(Chunk chunk) {
