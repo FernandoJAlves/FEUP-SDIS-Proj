@@ -43,7 +43,7 @@ public class Storage implements Serializable {
 
     public void setAvailableSpace(int maxDiskSpace) {
         availableSpace = maxDiskSpace - getOccupiedSpace();
-	}
+    }
 
     public synchronized int getOccupiedSpace() {
         int occupiedSpace = 0;
@@ -113,15 +113,15 @@ public class Storage implements Serializable {
     public boolean saveChunk(Chunk chunk, int peerId) {
         int chunkSize = chunk.getData().length;
 
+        // if chunk file owner or chunk already stored, do not store chunk
+        if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) {
+            return true;
+        }
+
         // check available storage
         if (availableSpace < chunkSize) {
             System.out.println("Error: storage is full!");
             return false;
-        }
-
-        // if chunk file owner or chunk already stored, do not store chunk
-        if (isFileOwner(chunk.getFileId()) || getChunk(chunk.getName()) != null) {
-            return true;
         }
 
         // store chunk
@@ -184,7 +184,7 @@ public class Storage implements Serializable {
         replicationHashmap.put(chunkName, peerList);
     }
 
-	public void removeFromReplicationMap(String chunkName, int peerId) {
+    public void removeFromReplicationMap(String chunkName, int peerId) {
         if (replicationHashmap.containsKey(chunkName)) {
             ArrayList<Integer> peerList = replicationHashmap.get(chunkName);
             if (peerList.contains(peerId)) {
