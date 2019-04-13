@@ -1,11 +1,13 @@
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class MessageHandler implements Runnable {
     private byte[] body;
     private String[] args;
+    private Map<String, ScheduledFuture<?>> scheduledPutchunks;
 
     public MessageHandler(byte[] message, int msg_size) {
 
@@ -14,10 +16,10 @@ public class MessageHandler implements Runnable {
         int indexCRLF = messageStr.indexOf("\r\n\r\n");
 
         byte[] header = new byte[indexCRLF];
-        int bodySize = msg_size-(indexCRLF+4);
-        byte[] body = new byte[bodySize]; //Plus 4 to count all the chars in CRLF
+        int bodySize = msg_size - (indexCRLF + 4);
+        byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
         System.arraycopy(message, 0, header, 0, indexCRLF);
-        System.arraycopy(message, indexCRLF+4, body, 0, bodySize);
+        System.arraycopy(message, indexCRLF + 4, body, 0, bodySize);
 
         String headerStr = new String(header);
 
@@ -26,6 +28,8 @@ public class MessageHandler implements Runnable {
         if (bodySize > 0) {
             this.body = body;
         }
+
+        this.scheduledPutchunks = new HashMap<String, ScheduledFuture<?>>();
     }
 
     public String[] makeArrayArgs(String m) {
@@ -79,11 +83,21 @@ public class MessageHandler implements Runnable {
         int chunkNum = Integer.parseInt(args[4]);
         int desiredRepDgr = Integer.parseInt(args[5]);
 
+        // check if there is a scheduled putchunk task
+        String chunkName = fileId + "_" + chunkNum;
+        if (scheduledPutchunks.containsKey(chunkName)) {
+            ScheduledFuture<?> future = scheduledPutchunks.get(chunkName);
+            if (!future.isDone()) {
+                future.cancel(true);
+            }
+            scheduledPutchunks.remove(chunkName);
+        }
+
         // retrieve local storage
         Storage storage = Peer.getStorage();
         Chunk chunk = new Chunk(fileId, chunkNum, body, desiredRepDgr);
 
-        if (storage.saveChunk(chunk,senderId)) {
+        if (storage.saveChunk(chunk, senderId)) {
             // send stored message
             String storedMsg = Message.mes_stored(version, Peer.getId(), fileId, chunkNum);
             MessageSender sender = new MessageSender("MC", storedMsg.getBytes()); // send message through MC
@@ -109,20 +123,20 @@ public class MessageHandler implements Runnable {
 
     private void handleGetChunk() {
         System.out.println("Received Getchunk!");
-        
+
         // arguments
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
-                
+
         // retrieve stored chunk
         Storage storage = Peer.getStorage();
         Chunk chunk = storage.getChunk(fileId, chunkNum);
-    
+
         // send chunk message
         byte[] message = Message.getChunkMessage(chunk);
-        
-        MessageSender sender = new MessageSender("MDR", message); //send message through MDR
-        int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); //random delay between 0 and 400ms
+
+        MessageSender sender = new MessageSender("MDR", message); // send message through MDR
+        int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms
         Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
     }
 
@@ -133,8 +147,8 @@ public class MessageHandler implements Runnable {
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
-        Chunk chunk = new Chunk(fileId,chunkNum,body,0);
-        
+        Chunk chunk = new Chunk(fileId, chunkNum, body, 0);
+
         Storage storage = Peer.getStorage();
         storage.addRestoredChunk(chunk);
     }
@@ -153,8 +167,7 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Removed!");
 
         // arguments
-        String version = args[1];
-        String senderId = args[2];
+        int senderId = Integer.parseInt(args[2]);
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
@@ -162,10 +175,21 @@ public class MessageHandler implements Runnable {
 
         // if peer has chunk
         String chunkName = fileId + "_" + chunkNum;
-        if (storage.getChunk(chunkName) != null) {
-            // remove from replication map
-            storage.removeFromReplicationMap(chunkName, Peer.getId());
-            // TODO: initiate putchunk protocol
+
+        Chunk chunk = storage.getChunk(chunkName);
+        if (chunk == null) {
+            return;
+        }
+
+        // remove peer from replication map
+        storage.removeFromReplicationMap(chunkName, senderId);
+        // if replication dgr dropped below desired, initiate putchunk protocol
+        if (storage.getChunkRepDgr(chunkName) < chunk.getDesiredRepDgr()) {
+            byte[] message = Message.getPutchunkMessage(chunk);
+            MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(), chunk.getDesiredRepDgr());
+            int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms
+            ScheduledFuture<?> putchunkTask = Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
+            scheduledPutchunks.put(chunkName, putchunkTask);
         }
     }
 }

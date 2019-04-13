@@ -51,9 +51,12 @@ public class Peer implements RemoteInterface {
         Utils.loadStorage();
 
         // schedule storage serialization
-        SaveDataToFile saver = new SaveDataToFile(); // Saves map to file every 10 seconds //TODO: If class does not do
-                                                     // anything else, remove it and just create a runnable
-        threadpool.scheduleAtFixedRate(saver, 10, 10, TimeUnit.SECONDS);
+        threadpool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Utils.saveStorage();
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     void parseArguments(String args[]) {
@@ -177,6 +180,9 @@ public class Peer implements RemoteInterface {
             MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }
+
+        // update available space
+        storage.setAvailableSpace(maxDiskSpace);    
     }
 
     // @Override

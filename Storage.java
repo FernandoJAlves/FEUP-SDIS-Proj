@@ -41,6 +41,10 @@ public class Storage implements Serializable {
         return availableSpace;
     }
 
+    public void setAvailableSpace(int maxDiskSpace) {
+        availableSpace = maxDiskSpace - getOccupiedSpace();
+	}
+
     public synchronized int getOccupiedSpace() {
         int occupiedSpace = 0;
         for (Chunk chunk : storedChunks) {
@@ -184,8 +188,7 @@ public class Storage implements Serializable {
         if (replicationHashmap.containsKey(chunkName)) {
             ArrayList<Integer> peerList = replicationHashmap.get(chunkName);
             if (peerList.contains(peerId)) {
-                System.out.println("removed from map!");
-                peerList.remove(peerId);
+                peerList.removeIf(s -> s == peerId);
             }
             replicationHashmap.put(chunkName, peerList);
         }
