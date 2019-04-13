@@ -1,8 +1,12 @@
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.Random;
@@ -145,7 +149,7 @@ public class Peer implements RemoteInterface {
         threadpool.schedule(new Runnable() {
             @Override
             public void run() {
-                // aggregate all restored chunks 
+                // aggregate all restored chunks
                 Utils.aggregateChunks(filepath, hashedFileId);
                 // clear requested chunks
                 storage.getRestoredChunks().clear();
@@ -153,43 +157,13 @@ public class Peer implements RemoteInterface {
         }, 1, TimeUnit.SECONDS);
     }
 
-    /*
-       // initiate tcp/ip server
-                try {
-                    ServerSocket server = new ServerSocket(8090);
-                    System.out.println("Server started"); 
-      
-                    System.out.println("Waiting for a client ..."); 
-          
-                    Socket socket = server.accept(); 
-                    System.out.println("Client accepted"); 
-                    server.close();
-    
-                    // takes input from the client socket 
-                    DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream())); 
-    
-                    byte[] chunkMsg = new byte[65000];
-                    in.read(chunkMsg);
-                    System.out.println(chunkMsg.toString());
-    
-                    System.out.println("Closing connection"); 
-      
-                    // close connection 
-                    socket.close(); 
-                    in.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-    */
-
     // @Override
     public void delete(String pathname) {
         FileManager file = new FileManager(pathname, 0);
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            for(int i = 0; i < 5; i++){ //Sends delete 5 times, once every second
+            for (int i = 0; i < 5; i++) { // Sends delete 5 times, once every second
                 MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
                 threadpool.schedule(sender, i, TimeUnit.SECONDS);
             }
@@ -214,42 +188,45 @@ public class Peer implements RemoteInterface {
         }
 
         // update available space
-        storage.setAvailableSpace(maxDiskSpace);    
+        storage.setAvailableSpace(maxDiskSpace);
     }
 
     // @Override
     public void state() {
         System.out.println("=================\nFiles Backed up:");
 
-        for(FileManager f : storage.getLocalFiles()) {
+        for (FileManager f : storage.getLocalFiles()) {
             System.out.println();
             System.out.println("     - Filename: " + f.getPathname());
             System.out.println("     - Hashed Id: " + f.getHashedFileId());
             System.out.println("     - Desired Rep Degree: " + f.getRepDgr());
             System.out.println("     - Chunks: ");
-            for(Chunk chunk : f.getChunkList()){
+            for (Chunk chunk : f.getChunkList()) {
                 System.out.println("        - Id: " + chunk.getNum());
-                System.out.println("        - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+                System.out.println("        - Perceived Rep Degree: "
+                        + storage.getReplicationHashmap().get(chunk.getName()).size());
             }
         }
 
         System.out.println("\n=================\nChunks Stored:");
 
-        for(Chunk chunk : storage.getStoredChunks()){
+        for (Chunk chunk : storage.getStoredChunks()) {
             System.out.println();
             System.out.println(" - Id: " + chunk.getNum());
-            System.out.println(" - Size: " + chunk.getData().length/1000.0 + " KBytes");
-            System.out.println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+            System.out.println(" - Size: " + chunk.getData().length / 1000.0 + " KBytes");
+            System.out
+                    .println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size());
         }
 
         System.out.println("\n=================");
-        System.out.println("Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace())/1000.0 + " KBytes");
-        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace())/1000.0 + " KBytes");
+        System.out.println(
+                "Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace()) / 1000.0 + " KBytes");
+        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace()) / 1000.0 + " KBytes");
         System.out.println("=================");
     }
 
     @Override
-    public void restore_enh(String filepath){
+    public void restore_enh(String filepath) {
         File file = new File(filepath);
         String finalFileId = filepath + file.lastModified();
         String hashedFileId = Utils.bytesToHex(Utils.encodeSHA256(finalFileId));
@@ -260,21 +237,163 @@ public class Peer implements RemoteInterface {
             return;
         }
 
+        /*ServerSocket server;
+        try {
+            server = new ServerSocket(8090);
+            System.out.println("Server started");
+            server.accept();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }*/
+
+        ServerSocket server;
+
+        // initiate tcp/ip server
         for (Chunk chunk : fm.getChunkList()) {
             String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
             MessageSender sender = new MessageSender("MC", message.getBytes());
-            threadpool.execute(sender);
+            threadpool.schedule(sender, 100, TimeUnit.MILLISECONDS);
+
+            try {
+                server = new ServerSocket(8090);
+        
+                System.out.println("Waiting for a client ...");
+
+                Socket socket = server.accept();
+                server.close();
+                System.out.println("Client accepted");
+
+                // takes input from the client socket
+                DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+
+                byte[] finalMsg = new byte[65000];
+                byte[] msg = new byte[65000];
+               
+                int counter = 0;
+
+                boolean done = false;
+                while (!done) {
+                    int readbytes = in.read(msg);
+                    System.out.println("> " + readbytes);
+                    if (readbytes > 0 && readbytes < 65000) {
+                        System.arraycopy(msg, 0, finalMsg, counter, readbytes);
+                        counter += readbytes;
+                    } else {
+                        break;
+                    }
+                }
+    
+                String messageStr = new String(finalMsg, 0, counter);
+    
+                int indexCRLF = messageStr.indexOf("\r\n\r\n");
+    
+                byte[] header = new byte[indexCRLF];
+                int bodySize = counter - (indexCRLF + 4);
+                byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
+                System.arraycopy(finalMsg, 0, header, 0, indexCRLF);
+                System.arraycopy(finalMsg, indexCRLF + 4, body, 0, bodySize);
+    
+                String headerStr = new String(header);
+                String[] args = makeArrayArgs(headerStr);
+    
+                String fileId = args[3];
+                int chunkNum = Integer.parseInt(args[4]);
+    
+                Chunk c = new Chunk(fileId, chunkNum, body, 0);
+    
+                Storage storage = Peer.getStorage();
+                storage.addRestoredChunk(c);
+    
+                // close connection
+                System.out.println("Closing connection");
+                socket.close();
+                in.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
+
+        Chunk chunk = fm.getChunkList().get(fm.getChunkList().size() - 1);
+        String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
+        MessageSender sender = new MessageSender("MC", message.getBytes());
+        threadpool.schedule(sender, 100, TimeUnit.MILLISECONDS);
+        try {
+            server = new ServerSocket(8090);
+    
+            System.out.println("Waiting for a client ...");
+
+            Socket socket = server.accept();
+            server.close();
+            System.out.println("Client accepted");
+
+            // takes input from the client socket
+            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+
+            byte[] finalMsg = new byte[65000];
+            byte[] msg = new byte[65000];
+           
+            int counter = 0;
+
+            boolean done = false;
+            while (!done) {
+                int readbytes = in.read(msg);
+                System.out.println("> " + readbytes);
+                if (readbytes > 0 && readbytes < 65000) {
+                    System.arraycopy(msg, 0, finalMsg, counter, readbytes);
+                    counter += readbytes;
+                } else {
+                    break;
+                }
+            }
+
+            String messageStr = new String(finalMsg, 0, counter);
+
+            int indexCRLF = messageStr.indexOf("\r\n\r\n");
+
+            byte[] header = new byte[indexCRLF];
+            int bodySize = counter - (indexCRLF + 4);
+            byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
+            System.arraycopy(finalMsg, 0, header, 0, indexCRLF);
+            System.arraycopy(finalMsg, indexCRLF + 4, body, 0, bodySize);
+
+            String headerStr = new String(header);
+            String[] args = makeArrayArgs(headerStr);
+
+            String fileId = args[3];
+            int chunkNum = Integer.parseInt(args[4]);
+
+            Chunk c = new Chunk(fileId, chunkNum, body, 0);
+
+            Storage storage = Peer.getStorage();
+            storage.addRestoredChunk(c);
+
+            // close connection
+            System.out.println("Closing connection");
+            socket.close();
+            in.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    
+
 
         // aggregate chunks after a second of delay
         threadpool.schedule(new Runnable() {
             @Override
             public void run() {
-                // aggregate all restored chunks 
+                // aggregate all restored chunks
                 Utils.aggregateChunks(filepath, hashedFileId);
                 // clear requested chunks
                 storage.getRestoredChunks().clear();
             }
-        }, 1, TimeUnit.SECONDS);
+        }, 3, TimeUnit.SECONDS);
+    }
+
+    public String[] makeArrayArgs(String m) {
+        String aux = m.trim(); // remove whitespace
+        return aux.split(" ");
     }
 }

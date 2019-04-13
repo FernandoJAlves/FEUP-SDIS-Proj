@@ -1,9 +1,8 @@
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,6 +141,7 @@ public class MessageHandler implements Runnable {
 
         // send chunk message
         byte[] message = Message.getChunkMessage(chunk);
+        System.out.println("The chunk size = " + chunk.getData().length);
 
         switch (version) {
         case "1.0":
@@ -156,13 +156,18 @@ public class MessageHandler implements Runnable {
             try {
                 socket = new Socket("localhost", 8090);
                 System.out.println("Connected");
-                // sends output to the socket 
+                // sends output to the socket
                 out = new DataOutputStream(socket.getOutputStream());
                 // send chunk message
                 out.write(message);
+                System.out.println("Message length = " + message.length);
                 // close connection
-                out.close(); 
+                out.close();
                 socket.close();
+            } catch(ConnectException e) {
+                System.out.println("Could not connect!");
+            } catch(SocketException e) {
+                System.out.println("Could not connect to socket!");
             } catch (UnknownHostException e1) {
                 // TODO Auto-generated catch b lock
                 e1.printStackTrace();

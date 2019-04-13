@@ -119,7 +119,7 @@ public class TestApp {
                         return;
                     }
                     String filePath = args[2];
-                    stub.restore(filePath);
+                    stub.restore_enh(filePath);
                     System.out.println("RESTOREENH!");
                     break;
                 }
