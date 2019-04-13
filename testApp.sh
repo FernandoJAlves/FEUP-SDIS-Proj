@@ -9,6 +9,8 @@ echo "7 - java TestApp peer_2 RECLAIM 0;";
 echo "8 - java TestApp peer_3 RECLAIM 0;";
 
 echo "9 - java TestApp peer_1 STATE;";
+echo "21 - java TestApp peer_1 RESTOREENH penguin.jpg;";
+
 echo "0 - Close Options";
 echo Value: ;
 read val;
@@ -50,6 +52,10 @@ run_j_cmd () {
         9)
             echo "java TestApp peer_1 STATE"
             java TestApp peer_1 STATE
+        ;;
+        21)
+            echo "java TestApp peer_1 RESTOREENH penguin.jpg"
+            java TestApp peer_1 RESTOREENH penguin.jpg
         ;;
         0)
             echo "Leaving..."

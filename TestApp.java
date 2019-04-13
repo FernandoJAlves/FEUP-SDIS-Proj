@@ -6,7 +6,7 @@ public class TestApp {
     }
 
     public enum ProtocolList {
-        BACKUP, RESTORE, DELETE, RECLAIM, STATE
+        BACKUP, RESTORE, DELETE, RECLAIM, STATE, RESTOREENH
     }
 
     public static boolean containsProtocol(String test) {
@@ -111,6 +111,16 @@ public class TestApp {
                     }
                     stub.state();
                     System.out.println("STATE!");
+                    break;
+                }
+                case "RESTOREENH": {
+                    if (args.length != 3) {
+                        System.out.println("ERROR: Incorrect number of arguments in RESTORE");
+                        return;
+                    }
+                    String filePath = args[2];
+                    stub.restore(filePath);
+                    System.out.println("RESTOREENH!");
                     break;
                 }
                 default:

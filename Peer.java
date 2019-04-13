@@ -219,4 +219,34 @@ public class Peer implements RemoteInterface {
         System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace())/1000.0 + " KBytes");
         System.out.println("=================");
     }
+
+    @Override
+    public void restore_enh(String filepath){
+        File file = new File(filepath);
+        String finalFileId = filepath + file.lastModified();
+        String hashedFileId = Utils.bytesToHex(Utils.encodeSHA256(finalFileId));
+
+        FileManager fm = storage.getLocalFile(hashedFileId);
+        if (fm == null) {
+            System.out.println("Error: file wasn't asked for backup!");
+            return;
+        }
+
+        for (Chunk chunk : fm.getChunkList()) {
+            String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
+            MessageSender sender = new MessageSender("MC", message.getBytes());
+            threadpool.execute(sender);
+        }
+
+        // aggregate chunks after a second of delay
+        threadpool.schedule(new Runnable() {
+            @Override
+            public void run() {
+                // aggregate all restored chunks 
+                Utils.aggregateChunks(filepath, hashedFileId);
+                // clear requested chunks
+                storage.getRestoredChunks().clear();
+            }
+        }, 1, TimeUnit.SECONDS);
+    }
 }
