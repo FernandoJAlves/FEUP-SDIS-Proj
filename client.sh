@@ -1,8 +1,8 @@
 echo "Options: ";
-echo "1 - java Client localhost peer_1 BACKUP qwerty.txt 1;";
+echo "1 - java Client localhost peer_1 BACKUP qwerty.txt 2;";
 echo "2 - java Client localhost peer_1 DELETE qwerty.txt;";
 echo "3 - java Client localhost peer_1 RESTORE qwerty.txt;";
-echo "4 - java Client localhost peer_1 BACKUP penguin.jpg 1;";
+echo "4 - java Client localhost peer_1 BACKUP penguin.jpg 2;";
 echo "5 - java Client localhost peer_1 DELETE penguin.jpg;";
 echo "6 - java Client localhost peer_1 RESTORE penguin.jpg;";
 echo "7 - java Client localhost peer_2 RECLAIM 0;";
@@ -15,8 +15,8 @@ read val;
 run_j_cmd () {
     case $1 in
         1)
-            echo "java Client localhost peer_1 BACKUP qwerty.txt 1"
-            java Client localhost peer_1 BACKUP qwerty.txt 1
+            echo "java Client localhost peer_1 BACKUP qwerty.txt 2"
+            java Client localhost peer_1 BACKUP qwerty.txt 2
         ;;
         2)
             echo "java Client localhost peer_1 DELETE qwerty.txt"
@@ -28,8 +28,8 @@ run_j_cmd () {
             java Client localhost peer_1 RESTORE qwerty.txt
         ;;
         4)
-            echo "java Client localhost peer_1 BACKUP penguin.jpg 1"
-            java Client localhost peer_1 BACKUP penguin.jpg 1
+            echo "java Client localhost peer_1 BACKUP penguin.jpg 2"
+            java Client localhost peer_1 BACKUP penguin.jpg 2
         ;;
         5)
             echo "java Client localhost peer_1 DELETE penguin.jpg"
