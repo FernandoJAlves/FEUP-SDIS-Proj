@@ -156,7 +156,7 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            for(int i = 0; i < 5; i++){ //Sends delete 5 times
+            for(int i = 0; i < 5; i++){ //Sends delete 5 times, once every second
                 MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
                 threadpool.schedule(sender, i, TimeUnit.SECONDS);
             }

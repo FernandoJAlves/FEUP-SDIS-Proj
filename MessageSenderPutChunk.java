@@ -23,7 +23,7 @@ public class MessageSenderPutChunk implements Runnable {
         String chunkName = fileId + "_" + chunkNumber;
         int knownRepDeg = Peer.getStorage().getChunkRepDgr(chunkName);
 
-        if(knownRepDeg < wantedRepDeg) { //if wanted repDeg has not been reached
+        if(knownRepDeg < wantedRepDeg || attemptCount == 0) { //if wanted repDeg has not been reached, and sends at least once
             if(attemptCount >= 5){
                 System.out.println("Could not backup!");
             }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-timeout=300 # Time before the tabs close
+timeout=300; # Time before the tabs close
 
 # Peers
 gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); java Peer 1.0 1 peer_1 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'

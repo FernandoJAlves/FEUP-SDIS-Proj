@@ -1,0 +1,1 @@
+gnome-terminal -x sh -c 'sh test.sh; sleep 3s; kill -9 $$; exec bash'
