@@ -159,8 +159,10 @@ public class Peer implements RemoteInterface {
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
-            threadpool.execute(sender);
+            for(int i = 0; i < 5; i++){ //Sends delete 5 times
+                MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+                threadpool.schedule(sender, i, TimeUnit.SECONDS);
+            }
         }
     }
 
@@ -187,6 +189,34 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void state() {
-        System.out.println(storage);
+        System.out.println(storage.getReplicationHashmap());
+
+        System.out.println("=================\nFiles Backed up:");
+
+        for(FileManager f : storage.getLocalFiles()){
+            System.out.println();
+            System.out.println("     - Filename: " + f.getPathname());
+            System.out.println("     - Hashed Id: " + f.getHashedFileId());
+            System.out.println("     - Desired Rep Degree: " + f.getRepDgr());
+            System.out.println("     - Chunks: ");
+            for(Chunk chunk : f.getChunkList()){
+                System.out.println("        - Id: " + chunk.getNum());
+                System.out.println("        - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+            }
+        }
+
+        System.out.println("\n=================\nChunks Stored:");
+
+        for(Chunk chunk : storage.getStoredChunks()){
+            System.out.println();
+            System.out.println(" - Id: " + chunk.getNum());
+            System.out.println(" - Size: " + chunk.getData().length/1000.0 + " KBytes");
+            System.out.println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() );
+        }
+
+        System.out.println("\n=================");
+        System.out.println("Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace())/1000.0 + " KBytes");
+        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace())/1000.0 + " KBytes");
+        System.out.println("=================");
     }
 }

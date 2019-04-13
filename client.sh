@@ -8,6 +8,7 @@ echo "6 - java Client localhost peer_1 RESTORE penguin.jpg;";
 echo "7 - java Client localhost peer_2 RECLAIM 0;";
 echo "8 - java Client localhost peer_3 RECLAIM 0;";
 
+echo "9 - java Client localhost peer_1 STATE;";
 echo "0 - Close Options";
 echo Value: ;
 read val;
@@ -45,6 +46,10 @@ run_j_cmd () {
         8)
             echo "java Client localhost peer_3 RECLAIM 0"
             java Client localhost peer_3 RECLAIM 0
+        ;;
+        9)
+            echo "java Client localhost peer_1 STATE"
+            java Client localhost peer_1 STATE
         ;;
         0)
             echo "Leaving..."

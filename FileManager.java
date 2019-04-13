@@ -14,12 +14,14 @@ public class FileManager implements Serializable {
     private File file;
     private String pathname, hashedFileId;
     private List<Chunk> chunks;
+    private int repDgr;
 
     public FileManager(String pathname, int repDgr) {
         this.pathname = pathname;
         this.file = new File(pathname);
         this.hashedFileId = getHashedFileId();
         this.chunks = getChunks(repDgr);
+        this.repDgr = repDgr;
     }
 
     public String getPathname() {
@@ -67,5 +69,9 @@ public class FileManager implements Serializable {
         }
 
         return chunks;
+    }
+
+    public int getRepDgr(){
+        return repDgr;
     }
 }
