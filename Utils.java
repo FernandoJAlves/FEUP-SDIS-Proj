@@ -42,6 +42,31 @@ public class Utils {
         return hexString.toString();
     }
 
+    public static String getHeader(byte[] message, int msg_size) {
+        String messageStr = new String(message, 0, msg_size);
+        int indexCRLF = messageStr.indexOf("\r\n\r\n");
+        byte[] header = new byte[indexCRLF];
+        System.arraycopy(message, 0, header, 0, indexCRLF);
+        return new String(header);
+    }
+
+    public static byte[] getBody(byte[] message, int msg_size) {
+        String messageStr = new String(message, 0, msg_size);
+        int indexCRLF = messageStr.indexOf("\r\n\r\n");
+        int bodySize = msg_size - (indexCRLF + 4);
+        if (bodySize > 0) {
+            byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
+            System.arraycopy(message, indexCRLF + 4, body, 0, bodySize);
+            return body;
+        }
+        return null;
+    }
+
+    public static String[] makeArrayArgs(String m) {
+        String aux = m.trim(); // remove whitespace
+        return aux.split(" ");
+    }
+
     public static void aggregateChunks(String filepath, String hashedFileId) {
         Storage storage = Peer.getStorage();
 

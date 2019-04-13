@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
@@ -236,28 +237,27 @@ public class Peer implements RemoteInterface {
             System.out.println("Error: file wasn't asked for backup!");
             return;
         }
+        
+        // initiate tcp/ip server and iterate over each needed chunk
+        List<Chunk> chunks = fm.getChunkList();
+    
+        for (int i = 0; i <= chunks.size(); i++) {
+            // send last chunk twice
+            Chunk chunk;
+            if (i < chunks.size()) {
+                chunk = chunks.get(i);
+            } else {
+                chunk = chunks.get(i - 1);
+            }
 
-        /*ServerSocket server;
-        try {
-            server = new ServerSocket(8090);
-            System.out.println("Server started");
-            server.accept();
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }*/
-
-        ServerSocket server;
-
-        // initiate tcp/ip server
-        for (Chunk chunk : fm.getChunkList()) {
+            // construct getchunk message
             String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.schedule(sender, 100, TimeUnit.MILLISECONDS);
 
             try {
-                server = new ServerSocket(8090);
-        
+                ServerSocket server = new ServerSocket(8090);
+
                 System.out.println("Waiting for a client ...");
 
                 Socket socket = server.accept();
@@ -267,44 +267,28 @@ public class Peer implements RemoteInterface {
                 // takes input from the client socket
                 DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
-                byte[] finalMsg = new byte[65000];
-                byte[] msg = new byte[65000];
-               
-                int counter = 0;
+                byte[] finalMessage = new byte[65000];
+                byte[] buf = new byte[65000];
 
-                boolean done = false;
-                while (!done) {
-                    int readbytes = in.read(msg);
-                    System.out.println("> " + readbytes);
-                    if (readbytes > 0 && readbytes < 65000) {
-                        System.arraycopy(msg, 0, finalMsg, counter, readbytes);
-                        counter += readbytes;
-                    } else {
-                        break;
-                    }
+                int counter = 0;
+                while (true) {
+                    int readbytes = in.read(buf);
+                    if (readbytes == -1) break;
+                    System.arraycopy(buf, 0, finalMessage, counter, readbytes);
+                    counter += readbytes;
                 }
-    
-                String messageStr = new String(finalMsg, 0, counter);
-    
-                int indexCRLF = messageStr.indexOf("\r\n\r\n");
-    
-                byte[] header = new byte[indexCRLF];
-                int bodySize = counter - (indexCRLF + 4);
-                byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
-                System.arraycopy(finalMsg, 0, header, 0, indexCRLF);
-                System.arraycopy(finalMsg, indexCRLF + 4, body, 0, bodySize);
-    
-                String headerStr = new String(header);
-                String[] args = makeArrayArgs(headerStr);
-    
+
+                String headerStr = Utils.getHeader(finalMessage,counter);
+                String[] args = Utils.makeArrayArgs(headerStr);
+                byte[] body = Utils.getBody(finalMessage,counter);
+
                 String fileId = args[3];
                 int chunkNum = Integer.parseInt(args[4]);
-    
                 Chunk c = new Chunk(fileId, chunkNum, body, 0);
-    
+
                 Storage storage = Peer.getStorage();
                 storage.addRestoredChunk(c);
-    
+
                 // close connection
                 System.out.println("Closing connection");
                 socket.close();
@@ -314,71 +298,6 @@ public class Peer implements RemoteInterface {
                 e.printStackTrace();
             }
         }
-
-        Chunk chunk = fm.getChunkList().get(fm.getChunkList().size() - 1);
-        String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
-        MessageSender sender = new MessageSender("MC", message.getBytes());
-        threadpool.schedule(sender, 100, TimeUnit.MILLISECONDS);
-        try {
-            server = new ServerSocket(8090);
-    
-            System.out.println("Waiting for a client ...");
-
-            Socket socket = server.accept();
-            server.close();
-            System.out.println("Client accepted");
-
-            // takes input from the client socket
-            DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-
-            byte[] finalMsg = new byte[65000];
-            byte[] msg = new byte[65000];
-           
-            int counter = 0;
-
-            boolean done = false;
-            while (!done) {
-                int readbytes = in.read(msg);
-                System.out.println("> " + readbytes);
-                if (readbytes > 0 && readbytes < 65000) {
-                    System.arraycopy(msg, 0, finalMsg, counter, readbytes);
-                    counter += readbytes;
-                } else {
-                    break;
-                }
-            }
-
-            String messageStr = new String(finalMsg, 0, counter);
-
-            int indexCRLF = messageStr.indexOf("\r\n\r\n");
-
-            byte[] header = new byte[indexCRLF];
-            int bodySize = counter - (indexCRLF + 4);
-            byte[] body = new byte[bodySize]; // Plus 4 to count all the chars in CRLF
-            System.arraycopy(finalMsg, 0, header, 0, indexCRLF);
-            System.arraycopy(finalMsg, indexCRLF + 4, body, 0, bodySize);
-
-            String headerStr = new String(header);
-            String[] args = makeArrayArgs(headerStr);
-
-            String fileId = args[3];
-            int chunkNum = Integer.parseInt(args[4]);
-
-            Chunk c = new Chunk(fileId, chunkNum, body, 0);
-
-            Storage storage = Peer.getStorage();
-            storage.addRestoredChunk(c);
-
-            // close connection
-            System.out.println("Closing connection");
-            socket.close();
-            in.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    
-
 
         // aggregate chunks after a second of delay
         threadpool.schedule(new Runnable() {
@@ -390,10 +309,5 @@ public class Peer implements RemoteInterface {
                 storage.getRestoredChunks().clear();
             }
         }, 3, TimeUnit.SECONDS);
-    }
-
-    public String[] makeArrayArgs(String m) {
-        String aux = m.trim(); // remove whitespace
-        return aux.split(" ");
     }
 }
