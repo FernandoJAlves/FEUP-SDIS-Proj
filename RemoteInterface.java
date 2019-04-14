@@ -6,7 +6,7 @@ public interface RemoteInterface extends Remote {
     void restore(String filepath) throws RemoteException;
     void delete(String pathname) throws RemoteException;
     void reclaim(int maxDiskSpace) throws RemoteException;
-    void state() throws RemoteException;
+    String state() throws RemoteException;
     void restore_enh(String filepath) throws RemoteException;
     void delete_enh(String filepath) throws RemoteException;
 }

@@ -203,42 +203,48 @@ public class Peer implements RemoteInterface {
             threadpool.execute(sender);
         }
 
-        // update available space
-        storage.setAvailableSpace(maxDiskSpace);
+        //Update available space after a few seconds to ensure it stays updated
+        threadpool.schedule(new Runnable() {
+            @Override
+            public void run() {
+
+            // update available space
+                storage.setAvailableSpace(maxDiskSpace);
+            }
+        }, 3, TimeUnit.SECONDS);
     }
 
     // @Override
-    public void state() {
-        System.out.println("=================\nFiles Backed up:");
+    public String state() {
+        String buf = "";
+        buf += "=================\nFiles Backed up:\n";
 
         for (FileManager f : storage.getLocalFiles()) {
-            System.out.println();
-            System.out.println("     - Filename: " + f.getPathname());
-            System.out.println("     - Hashed Id: " + f.getHashedFileId());
-            System.out.println("     - Desired Rep Degree: " + f.getRepDgr());
-            System.out.println("     - Chunks: ");
+            buf += "\n     - Filename: " + f.getPathname() + '\n';
+            buf += "     - Hashed Id: " + f.getHashedFileId() + '\n';
+            buf += "     - Desired Rep Degree: " + f.getRepDgr() + '\n';
+            buf += "     - Chunks: \n";
+
             for (Chunk chunk : f.getChunkList()) {
-                System.out.println("        - Id: " + chunk.getNum());
-                System.out.println("        - Perceived Rep Degree: "
-                        + storage.getReplicationHashmap().get(chunk.getName()).size());
+                buf += "        - Id: " + chunk.getNum() + '\n';
+                buf += "        - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() + '\n';
             }
         }
-
-        System.out.println("\n=================\nChunks Stored:");
+        
+        buf += "\n=================\nChunks Stored: \n";
 
         for (Chunk chunk : storage.getStoredChunks()) {
-            System.out.println();
-            System.out.println(" - Id: " + chunk.getNum());
-            System.out.println(" - Size: " + chunk.getData().length / 1000.0 + " KBytes");
-            System.out
-                    .println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size());
+            buf += "\n - Id: " + chunk.getNum() + '\n';
+            buf += " - Size: " + chunk.getData().length / 1000.0 + " KBytes\n";
+            buf += " - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() + '\n';
         }
 
-        System.out.println("\n=================");
-        System.out.println(
-                "Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace()) / 1000.0 + " KBytes");
-        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace()) / 1000.0 + " KBytes");
-        System.out.println("=================");
+        buf += "\n=================\n";
+        buf += "Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace()) / 1000.0 + " KBytes\n";
+        buf += "Peer Occupied Storage: " + (storage.getOccupiedSpace()) / 1000.0 + " KBytes\n";
+        buf += "=================\n";
+
+        return buf;
     }
 
     @Override
