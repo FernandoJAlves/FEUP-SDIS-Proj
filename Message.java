@@ -3,8 +3,6 @@ import static java.lang.Math.pow;
 
 public class Message {
 
-    private static final char[] crlf = { 0xD, 0xA };
-
     public enum MessageType {
         PUTCHUNK, STORED, GETCHUNK, CHUNK, DELETE, REMOVED
     }
@@ -20,94 +18,19 @@ public class Message {
         return false;
     }
 
-    public static void main(String args[]) throws IOException {
-
-        // Example: java message STORED 1.0 8000 333 999999 7
-
-        // <MessageType> <Version> <SenderId> <FileId>
-        // <ChunkNo> <ReplicationDeg> <CRLF>
-
-        String messageType = args[0];
-        String version = args[1];
-        int senderId = Integer.parseInt(args[2]);
-        String fileId = args[3];
-        int chunkNo = Integer.parseInt(args[4]);
-        int replicationDeg = Integer.parseInt(args[5]);
-
-        char[] finalMesType = {};
-        char[] finalVersion = {};
-        char[] finalSenderId = {};
-        char[] finalChunkNo = {};
-        char[] finalRepDeg = {};
-
-        // Message Type
-        if (containsMesType(messageType)) {
-            finalMesType = messageType.toCharArray();
-        } else {
-            System.out.println("Invalid Message Type");
-            return;
-        }
-        // Version
-        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
-            finalVersion = version.toCharArray();
-        } else {
-            System.out.println("Invalid Version Format");
-            return;
-        }
-        // SenderId
-        if (senderId >= 0) { // Assumindo que os ids são sempre valores positivos
-            finalSenderId = String.valueOf(senderId).toCharArray();
-        } else {
-            System.out.println("Invalid Sender ID");
-            return;
-        }
-        // FileId
-        // String finalHashedFileId = bytesToHex(encodeSHA256(String.valueOf(fileId)));
-
-        // ChunkNo
-        if (chunkNo < pow(10, 6)) {
-            finalChunkNo = ("" + chunkNo).toCharArray();
-        } else {
-            System.out.println("Chunk Number was too large");
-            return;
-        }
-
-        // Replication Degree
-        if (replicationDeg < 10) {
-            finalRepDeg = ("" + replicationDeg).toCharArray();
-        } else {
-            System.out.println("Replication Degree was to large");
-            return;
-        }
-
-        String size = "   Size: ";
-
-        System.out.print(finalMesType);
-        System.out.println(size + finalMesType.length);
-        System.out.print(finalVersion);
-        System.out.println(size + finalVersion.length);
-        System.out.print(finalSenderId);
-        System.out.println(size + finalSenderId.length);
-        //System.out.print(finalHashedFileId);
-        //System.out.println(size + finalHashedFileId.length());
-        System.out.print(finalChunkNo);
-        System.out.println(size + finalChunkNo.length);
-        System.out.print(finalRepDeg);
-        System.out.println(size + finalRepDeg.length);
-
-    }
-
     public Message() {
     }
 
     // <MessageType> <Version> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
     public static String mes_putchunk(String version, int id, String fileId, int chunkNo, int repDeg) {
-        // TODO: check all of the input values
 
         String finalVersion;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
+            return "ERROR";
+        }
+        if(chunkNo >= 1000000){ //Has to be smaller than 1.000.000
             return "ERROR";
         }
 

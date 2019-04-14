@@ -75,19 +75,15 @@ public class Peer implements RemoteInterface {
     }
 
     public static Channel getChannel(String channel) {
-        // TODO: Remove prints, just for testing
         if (channel == "MC") {
-            // System.out.println("Got mc");
             return mc;
         }
 
         if (channel == "MDB") {
-            // System.out.println("Got MDB");
             return mdb;
         }
 
         if (channel == "MDR") {
-            // System.out.println("Got MDR");
             return mdr;
         }
 

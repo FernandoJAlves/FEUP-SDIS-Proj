@@ -18,7 +18,6 @@ public class Utils {
     public Utils() {
     }
 
-    // TODO: See if there is a better way of doing this
     public static byte[] encodeSHA256(String toEncode) {
         byte[] encodedString = {};
         try {

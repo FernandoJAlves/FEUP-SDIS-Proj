@@ -127,23 +127,21 @@ public class MessageHandler implements Runnable {
 
         // send chunk message
         byte[] message = Message.getChunkMessage(chunk);
-        System.out.println("The chunk size = " + chunk.getData().length);
+        // System.out.println("The chunk size = " + chunk.getData().length);
 
         String runningVer; // Version of the protocol that will be run
 
         if (senderVersion.equals(Peer.getVersion())) { // Same version
-            // System.out.println("Same Version");
             runningVer = senderVersion;
         } else if (senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")) { // Diff version but sender is
                                                                                      // vanilla
-            // System.out.println("Diff Version but works");
             runningVer = senderVersion;
         } else {
             System.out.println("Error: Request's Version is greater than the Receiver's Version");
             return;
         }
 
-        System.out.println("Running: " + runningVer);
+        // System.out.println("Running: " + runningVer);
 
         switch (runningVer) {
         case "1.0":
@@ -198,17 +196,38 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Delete!");
 
         // arguments
+        String senderVersion = args[1];
         String fileId = args[3];
 
         Storage storage = Peer.getStorage();
 
-        // delete all chunks
-        storage.deleteChunks(fileId);
+        String runningVer; // Version of the protocol that will be run
 
-        // TODO: se versão for 2.0 corre esta parte para mandar mensagem deleted
-        String message = Message.mes_deleted("2.0", Peer.getId(), fileId);
-        MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
-        Peer.getThreadPool().execute(sender);
+        if (senderVersion.equals(Peer.getVersion())) { // Same version
+            runningVer = senderVersion;
+        } else if (senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")) { // Diff version but sender is
+            runningVer = senderVersion;
+        } else {
+            System.out.println("Error: Request's Version is greater than the Receiver's Version");
+            return;
+        }
+
+        switch (runningVer) {
+        case "1.0": // vanilla version
+            // delete all chunks
+            storage.deleteChunks(fileId);
+            break;
+        case "2.0": // enhancement
+            // delete all chunks
+            storage.deleteChunks(fileId);
+            String message = Message.mes_deleted("2.0", Peer.getId(), fileId);
+            MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+            Peer.getThreadPool().execute(sender);
+            break;
+        default:
+            break;
+        }
+
     }
 
     private void handleRemoved() {
