@@ -26,10 +26,6 @@ public class Message {
 
         // <MessageType> <Version> <SenderId> <FileId>
         // <ChunkNo> <ReplicationDeg> <CRLF>
-        /*
-         * String messageType = "CHUNK"; String version = "1.0"; int senderId = 8000;
-         * int fileId = 333; int chunkNo = 3; int replicationDeg = 3;
-         */
 
         String messageType = args[0];
         String version = args[1];
@@ -120,12 +116,14 @@ public class Message {
 
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
     public static String mes_stored(String version, int id, String fileId, int chunkNo) {
-        // TODO: check all of the input values
 
         String finalVersion;
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
+            return "ERROR";
+        }
+        if(chunkNo >= 1000000){ //Has to be smaller than 1.000.000
             return "ERROR";
         }
 
@@ -141,6 +139,9 @@ public class Message {
         } else {
             return "ERROR";
         }
+        if(chunkNo >= 1000000){ //Has to be smaller than 1.000.000
+            return "ERROR";
+        }
 
         return "GETCHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo
                 + " \r\n\r\n";
@@ -153,6 +154,9 @@ public class Message {
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
+            return "ERROR";
+        }
+        if(chunkNo >= 1000000){ //Has to be smaller than 1.000.000
             return "ERROR";
         }
 
@@ -179,6 +183,9 @@ public class Message {
         if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
             finalVersion = version;
         } else {
+            return "ERROR";
+        }
+        if(chunkNo >= 1000000){ //Has to be smaller than 1.000.000
             return "ERROR";
         }
 
