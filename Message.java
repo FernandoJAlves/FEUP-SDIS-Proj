@@ -197,9 +197,17 @@ public class Message {
 
     public static byte[] mes_addBody(String msg, byte[] body) {
         byte[] header = msg.getBytes();
-        byte[] message = new byte[header.length + body.length];
-        System.arraycopy(header, 0, message, 0, header.length);
-        System.arraycopy(body, 0, message, header.length, body.length);
+        byte[] message;
+        if(body == null){
+            message = new byte[header.length];
+            System.arraycopy(header, 0, message, 0, header.length);
+        }
+        else{
+            message = new byte[header.length + body.length];
+            System.arraycopy(header, 0, message, 0, header.length);
+            System.arraycopy(body, 0, message, header.length, body.length);
+        }
+
         return message;
     }
 }

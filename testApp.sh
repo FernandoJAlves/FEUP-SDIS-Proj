@@ -9,6 +9,11 @@ echo "7 - java TestApp peer_2 RECLAIM 0;";
 echo "8 - java TestApp peer_3 RECLAIM 0;";
 
 echo "9 - java TestApp peer_1 STATE;";
+
+echo "15 - java TestApp peer_1 BACKUP file64k.txt 2;";
+echo "16 - java TestApp peer_1 DELETE file64k.txt;";
+echo "17 - java TestApp peer_1 RESTORE file64k.txt;";
+
 echo "21 - java TestApp peer_1 RESTOREENH penguin.jpg;";
 
 echo "0 - Close Options";
@@ -53,9 +58,25 @@ run_j_cmd () {
             echo "java TestApp peer_1 STATE"
             java TestApp peer_1 STATE
         ;;
+        15)
+            echo "java TestApp peer_1 BACKUP file64k.txt 2"
+            java TestApp peer_1 BACKUP file64k.txt 2
+        ;;
+        16)
+            echo "java TestApp peer_1 DELETE file64k.txt"
+            java TestApp peer_1 DELETE file64k.txt
+        ;;
+        17)
+            echo "java TestApp peer_1 RESTORE file64k.txt"
+            java TestApp peer_1 RESTORE file64k.txt
+        ;;
         21)
             echo "java TestApp peer_1 RESTOREENH penguin.jpg"
             java TestApp peer_1 RESTOREENH penguin.jpg
+        ;;
+        22)
+            echo "java TestApp peer_1 RESTOREENH file64k.jpg"
+            java TestApp peer_1 RESTOREENH file64k.jpg
         ;;
         0)
             echo "Leaving..."

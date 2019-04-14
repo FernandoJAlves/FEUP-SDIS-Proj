@@ -115,12 +115,22 @@ public class TestApp {
                 }
                 case "RESTOREENH": {
                     if (args.length != 3) {
-                        System.out.println("ERROR: Incorrect number of arguments in RESTORE");
+                        System.out.println("ERROR: Incorrect number of arguments in RESTOREENH");
                         return;
                     }
                     String filePath = args[2];
                     stub.restore_enh(filePath);
                     System.out.println("RESTOREENH!");
+                    break;
+                }
+                case "DELETEENH": {
+                    if (args.length != 3) {
+                        System.out.println("ERROR: Incorrect number of arguments in DELETEENH");
+                        return;
+                    }
+                    String pathname = args[2];
+                    stub.delete_enh(pathname);
+                    System.out.println("DELETE!");
                     break;
                 }
                 default:

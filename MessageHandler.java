@@ -25,6 +25,9 @@ public class MessageHandler implements Runnable {
         if (body != null) {
             this.body = body;
         }
+        else{
+            this.body = new byte[0]; //Case of last chunk being size 0
+        }
 
         this.scheduledPutchunks = new HashMap<String, ScheduledFuture<?>>();
     }
@@ -112,7 +115,7 @@ public class MessageHandler implements Runnable {
         System.out.println("Received Getchunk!");
 
         // arguments
-        String version = args[1];
+        String senderVersion = args[1];
         String fileId = args[3];
         int chunkNum = Integer.parseInt(args[4]);
 
@@ -124,7 +127,24 @@ public class MessageHandler implements Runnable {
         byte[] message = Message.getChunkMessage(chunk);
         System.out.println("The chunk size = " + chunk.getData().length);
 
-        switch (version) {
+        String runningVer; //Version of the protocol that will be run
+
+        if(senderVersion.equals(Peer.getVersion())){ //Same version
+            System.out.println("Same Version");
+            runningVer = senderVersion;
+        }
+        else if(senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")){ //Diff version but sender is vanilla
+            System.out.println("Diff Version but works");
+            runningVer = senderVersion;
+        }
+        else{
+            System.out.println("Error: Request's Version is greater than the Receiver's Version");
+            return;
+        }
+
+        System.out.println("Running: " + runningVer);
+
+        switch (runningVer) {
         case "1.0":
             MessageSender sender = new MessageSender("MDR", message); // send message through MDR
             int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms

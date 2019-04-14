@@ -228,6 +228,12 @@ public class Peer implements RemoteInterface {
 
     @Override
     public void restore_enh(String filepath) {
+        // Check if the peer can run the protocol
+        if (!protocolVersion.equals("2.0")) { // Se o protocolo do peer não for 2.0, não pode correr enhancements
+            System.out.println("This Peer cannot run this protocol!");
+            return;
+        }
+
         File file = new File(filepath);
         String finalFileId = filepath + file.lastModified();
         String hashedFileId = Utils.bytesToHex(Utils.encodeSHA256(finalFileId));
@@ -237,10 +243,10 @@ public class Peer implements RemoteInterface {
             System.out.println("Error: file wasn't asked for backup!");
             return;
         }
-        
+
         // initiate tcp/ip server and iterate over each needed chunk
         List<Chunk> chunks = fm.getChunkList();
-    
+
         for (int i = 0; i <= chunks.size(); i++) {
             // send last chunk twice
             Chunk chunk;
@@ -273,14 +279,15 @@ public class Peer implements RemoteInterface {
                 int counter = 0;
                 while (true) {
                     int readbytes = in.read(buf);
-                    if (readbytes == -1) break;
+                    if (readbytes == -1)
+                        break;
                     System.arraycopy(buf, 0, finalMessage, counter, readbytes);
                     counter += readbytes;
                 }
 
-                String headerStr = Utils.getHeader(finalMessage,counter);
+                String headerStr = Utils.getHeader(finalMessage, counter);
                 String[] args = Utils.makeArrayArgs(headerStr);
-                byte[] body = Utils.getBody(finalMessage,counter);
+                byte[] body = Utils.getBody(finalMessage, counter);
 
                 String fileId = args[3];
                 int chunkNum = Integer.parseInt(args[4]);
@@ -308,6 +315,51 @@ public class Peer implements RemoteInterface {
                 // clear requested chunks
                 storage.getRestoredChunks().clear();
             }
-        }, 3, TimeUnit.SECONDS);
+        }, 1, TimeUnit.SECONDS);
     }
+
+    // @Override
+    public void delete_enh(String pathname) {
+        // Check if the peer can run the protocol
+        if (!protocolVersion.equals("2.0")) { // Se o protocolo do peer não for 2.0, não pode correr enhancements
+            System.out.println("This Peer cannot run this protocol!");
+            return;
+        }
+
+
+        //PARTE ENHANCEMENT - Logica
+
+        /*
+        
+         - Dar push a cada chunk a uma estrutura de dados no storage, que guarda o chunk e os peers que guardaram o chunk
+            (alternativa, usar a mesma estrutura de dados que já temos, mas não dar clear quando recebe um DELETE 2.0)
+         
+         - Se for a primeira execução cria uma instancia de MessageDeleteCycle (com scheduledwithfixedrate) 
+            que manda mensagem delete a todos os chunks na estrutura de dados que falei de X em X segundos
+            (talvez crie logo que o peer começa como os channels, caso fazer só primeiro caso seja complicado)
+         
+         - Delete vai passar a ter uma resposta, e por cada resposta dessas que um peer receber, remove o valor do
+            peer que enviou resposta na tal estrutura. Se chegar a 0 (o array list fica vazio), tira-se da estrutura.
+         
+         - A tal resposta só surgirá no caso de realmente ainda tiver o chunk por apagar, se não tiver não manda
+            (tem o problema de se a resposta falhar fica lá infinitamente a mandar o delete, mas para simplificar acho melhor fazer assim)
+
+        */
+
+
+/*
+        FileManager file = new FileManager(pathname, 0);
+
+        for (Chunk chunk : file.getChunkList()) {
+            String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
+            for (int i = 0; i < 5; i++) { // Sends delete 5 times, once every second
+                MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+                threadpool.schedule(sender, i, TimeUnit.SECONDS);
+            }
+        }
+        */
+
+
+    }
+
 }
