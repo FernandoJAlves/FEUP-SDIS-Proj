@@ -109,7 +109,7 @@ public class TestApp {
                         System.out.println("ERROR: Incorrect number of arguments in STATE");
                         return;
                     }
-                    stub.state();
+                    System.out.println(stub.state());
                     System.out.println("STATE!");
                     break;
                 }

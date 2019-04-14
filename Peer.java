@@ -118,8 +118,8 @@ public class Peer implements RemoteInterface {
     // @Override
     public void backup(String filepath, int replicationDeg) {
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
-        
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
+
         FileManager file = new FileManager(filepath, replicationDeg);
         storage.addFile(file);
 
@@ -129,7 +129,7 @@ public class Peer implements RemoteInterface {
                     replicationDeg);
             threadpool.execute(sender);
         }
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
     }
 
     // @Override
@@ -145,14 +145,14 @@ public class Peer implements RemoteInterface {
         }
 
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
 
         for (Chunk chunk : fm.getChunkList()) {
             String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.execute(sender);
         }
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
 
         // aggregate chunks after a second of delay
         threadpool.schedule(new Runnable() {
@@ -171,7 +171,7 @@ public class Peer implements RemoteInterface {
         FileManager file = new FileManager(pathname, 0);
 
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
@@ -181,7 +181,7 @@ public class Peer implements RemoteInterface {
             }
         }
 
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
     }
 
     // @Override
@@ -196,47 +196,55 @@ public class Peer implements RemoteInterface {
             // remove chunk from stored chunks
             storage.removeChunk(index);
             // send removed message
-            String message = Message.mes_removed("1.0", Peer.getId(), fileId, chunkNum); //Since this is a vanilla protocol, the version will always be 1.0
+            String message = Message.mes_removed("1.0", Peer.getId(), fileId, chunkNum); // Since this is a vanilla
+                                                                                         // protocol, the version will
+                                                                                         // always be 1.0
             MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }
 
-        // update available space
-        storage.setAvailableSpace(maxDiskSpace);
+        //Update available space after a few seconds to ensure it stays updated
+        threadpool.schedule(new Runnable() {
+            @Override
+            public void run() {
+
+            // update available space
+                storage.setAvailableSpace(maxDiskSpace);
+            }
+        }, 3, TimeUnit.SECONDS);
     }
 
     // @Override
-    public void state() {
-        System.out.println("=================\nFiles Backed up:");
+    public String state() {
+        String buf = "";
+        buf += "=================\nFiles Backed up:\n";
 
         for (FileManager f : storage.getLocalFiles()) {
-            System.out.println();
-            System.out.println("     - Filename: " + f.getPathname());
-            System.out.println("     - Hashed Id: " + f.getHashedFileId());
-            System.out.println("     - Desired Rep Degree: " + f.getRepDgr());
-            System.out.println("     - Chunks: ");
+            buf += "\n     - Filename: " + f.getPathname() + '\n';
+            buf += "     - Hashed Id: " + f.getHashedFileId() + '\n';
+            buf += "     - Desired Rep Degree: " + f.getRepDgr() + '\n';
+            buf += "     - Chunks: \n";
+
             for (Chunk chunk : f.getChunkList()) {
-                System.out.println("        - Id: " + chunk.getNum());
-                System.out.println("        - Perceived Rep Degree: "
-                        + storage.getReplicationHashmap().get(chunk.getName()).size());
+                buf += "        - Id: " + chunk.getNum() + '\n';
+                buf += "        - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() + '\n';
             }
         }
-
-        System.out.println("\n=================\nChunks Stored:");
+        
+        buf += "\n=================\nChunks Stored: \n";
 
         for (Chunk chunk : storage.getStoredChunks()) {
-            System.out.println();
-            System.out.println(" - Id: " + chunk.getNum());
-            System.out.println(" - Size: " + chunk.getData().length / 1000.0 + " KBytes");
-            System.out
-                    .println(" - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size());
+            buf += "\n - Id: " + chunk.getNum() + '\n';
+            buf += " - Size: " + chunk.getData().length / 1000.0 + " KBytes\n";
+            buf += " - Perceived Rep Degree: " + storage.getReplicationHashmap().get(chunk.getName()).size() + '\n';
         }
 
-        System.out.println("\n=================");
-        System.out.println(
-                "Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace()) / 1000.0 + " KBytes");
-        System.out.println("Peer Occupied Storage: " + (storage.getOccupiedSpace()) / 1000.0 + " KBytes");
-        System.out.println("=================");
+        buf += "\n=================\n";
+        buf += "Peer Max Storage: " + (storage.getAvailableSpace() + storage.getOccupiedSpace()) / 1000.0 + " KBytes\n";
+        buf += "Peer Occupied Storage: " + (storage.getOccupiedSpace()) / 1000.0 + " KBytes\n";
+        buf += "=================\n";
+
+        return buf;
     }
 
     @Override
@@ -339,39 +347,39 @@ public class Peer implements RemoteInterface {
             return;
         }
 
-
-        //PARTE ENHANCEMENT - Logica
+        // PARTE ENHANCEMENT - Logica
 
         /*
-        
-         - Dar push a cada chunk a uma estrutura de dados no storage, que guarda o chunk e os peers que guardaram o chunk
-            (alternativa, usar a mesma estrutura de dados que já temos, mas não dar clear quando recebe um DELETE 2.0)
-         
-         - Se for a primeira execução cria uma instancia de MessageDeleteCycle (com scheduledwithfixedrate) 
-            que manda mensagem delete a todos os chunks na estrutura de dados que falei de X em X segundos
-            (talvez crie logo que o peer começa como os channels, caso fazer só primeiro caso seja complicado)
-         
-         - Delete vai passar a ter uma resposta, e por cada resposta dessas que um peer receber, remove o valor do
-            peer que enviou resposta na tal estrutura. Se chegar a 0 (o array list fica vazio), tira-se da estrutura.
-         
-         - A tal resposta só surgirá no caso de realmente ainda tiver o chunk por apagar, se não tiver não manda
-            (tem o problema de se a resposta falhar fica lá infinitamente a mandar o delete, mas para simplificar acho melhor fazer assim)
+         * 
+         * - Dar push a cada chunk a uma estrutura de dados no storage, que guarda o
+         * chunk e os peers que guardaram o chunk (alternativa, usar a mesma estrutura
+         * de dados que já temos, mas não dar clear quando recebe um DELETE 2.0)
+         * 
+         * - Se for a primeira execução cria uma instancia de MessageDeleteCycle (com
+         * scheduledwithfixedrate) que manda mensagem delete a todos os chunks na
+         * estrutura de dados que falei de X em X segundos (talvez crie logo que o peer
+         * começa como os channels, caso fazer só primeiro caso seja complicado)
+         * 
+         * - Delete vai passar a ter uma resposta, e por cada resposta dessas que um
+         * peer receber, remove o valor do peer que enviou resposta na tal estrutura. Se
+         * chegar a 0 (o array list fica vazio), tira-se da estrutura.
+         * 
+         * - A tal resposta só surgirá no caso de realmente ainda tiver o chunk por
+         * apagar, se não tiver não manda (tem o problema de se a resposta falhar fica
+         * lá infinitamente a mandar o delete, mas para simplificar acho melhor fazer
+         * assim)
+         * 
+         */
 
-        */
-
-
-/*
-        FileManager file = new FileManager(pathname, 0);
-
-        for (Chunk chunk : file.getChunkList()) {
-            String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            for (int i = 0; i < 5; i++) { // Sends delete 5 times, once every second
-                MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
-                threadpool.schedule(sender, i, TimeUnit.SECONDS);
-            }
-        }
-        */
-
+        /*
+         * FileManager file = new FileManager(pathname, 0);
+         * 
+         * for (Chunk chunk : file.getChunkList()) { String message =
+         * Message.mes_delete(protocolVersion, id, chunk.getFileId()); for (int i = 0; i
+         * < 5; i++) { // Sends delete 5 times, once every second MessageSender sender =
+         * new MessageSender("MC", message.getBytes()); // send message through MC
+         * threadpool.schedule(sender, i, TimeUnit.SECONDS); } }
+         */
 
     }
 
