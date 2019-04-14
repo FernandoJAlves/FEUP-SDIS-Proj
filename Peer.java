@@ -117,6 +117,9 @@ public class Peer implements RemoteInterface {
 
     // @Override
     public void backup(String filepath, int replicationDeg) {
+        String tempVersion = protocolVersion;
+        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+        
         FileManager file = new FileManager(filepath, replicationDeg);
         storage.addFile(file);
 
@@ -126,6 +129,7 @@ public class Peer implements RemoteInterface {
                     replicationDeg);
             threadpool.execute(sender);
         }
+        protocolVersion = tempVersion; //Reset the version
     }
 
     // @Override
@@ -140,11 +144,15 @@ public class Peer implements RemoteInterface {
             return;
         }
 
+        String tempVersion = protocolVersion;
+        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+
         for (Chunk chunk : fm.getChunkList()) {
             String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.execute(sender);
         }
+        protocolVersion = tempVersion; //Reset the version
 
         // aggregate chunks after a second of delay
         threadpool.schedule(new Runnable() {
@@ -162,6 +170,9 @@ public class Peer implements RemoteInterface {
     public void delete(String pathname) {
         FileManager file = new FileManager(pathname, 0);
 
+        String tempVersion = protocolVersion;
+        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
             for (int i = 0; i < 5; i++) { // Sends delete 5 times, once every second
@@ -169,6 +180,8 @@ public class Peer implements RemoteInterface {
                 threadpool.schedule(sender, i, TimeUnit.SECONDS);
             }
         }
+
+        protocolVersion = tempVersion; //Reset the version
     }
 
     // @Override
@@ -183,7 +196,7 @@ public class Peer implements RemoteInterface {
             // remove chunk from stored chunks
             storage.removeChunk(index);
             // send removed message
-            String message = Message.mes_removed(Peer.getVersion(), Peer.getId(), fileId, chunkNum);
+            String message = Message.mes_removed("1.0", Peer.getId(), fileId, chunkNum); //Since this is a vanilla protocol, the version will always be 1.0
             MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }

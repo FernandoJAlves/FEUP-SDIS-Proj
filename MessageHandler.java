@@ -130,11 +130,11 @@ public class MessageHandler implements Runnable {
         String runningVer; //Version of the protocol that will be run
 
         if(senderVersion.equals(Peer.getVersion())){ //Same version
-            System.out.println("Same Version");
+            //System.out.println("Same Version");
             runningVer = senderVersion;
         }
         else if(senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")){ //Diff version but sender is vanilla
-            System.out.println("Diff Version but works");
+            //System.out.println("Diff Version but works");
             runningVer = senderVersion;
         }
         else{

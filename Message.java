@@ -115,7 +115,7 @@ public class Message {
             return "ERROR";
         }
 
-        return "PUTCHUNK " + finalVersion + " " + id + " " + fileId + " " + chunkNo + " " + repDeg + "\r\n\r\n";
+        return "PUTCHUNK " + finalVersion + " " + id + " " + fileId + " " + chunkNo + " " + repDeg + " \r\n\r\n";
     }
 
     // STORED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -129,7 +129,7 @@ public class Message {
             return "ERROR";
         }
 
-        return "STORED " + finalVersion + " " + id + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        return "STORED " + finalVersion + " " + id + " " + fileId + " " + chunkNo + " \r\n\r\n";
     }
 
     // GETCHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -143,7 +143,7 @@ public class Message {
         }
 
         return "GETCHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo
-                + "\r\n\r\n";
+                + " \r\n\r\n";
     }
 
     // CHUNK <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF><Body>
@@ -156,7 +156,7 @@ public class Message {
             return "ERROR";
         }
 
-        return "CHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        return "CHUNK " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + " \r\n\r\n";
     }
 
     // DELETE <Version> <SenderId> <FileId> <CRLF><CRLF>
@@ -169,7 +169,7 @@ public class Message {
             return "ERROR";
         }
 
-        return "DELETE " + finalVersion + " " + senderId + " " + fileId + "\r\n\r\n";
+        return "DELETE " + finalVersion + " " + senderId + " " + fileId + " \r\n\r\n";
     }
 
     // REMOVED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -182,7 +182,7 @@ public class Message {
             return "ERROR";
         }
 
-        return "REMOVED " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        return "REMOVED " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + " \r\n\r\n";
     }
 
     public static byte[] getPutchunkMessage(Chunk chunk) {
