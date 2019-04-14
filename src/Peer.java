@@ -108,7 +108,7 @@ public class Peer implements RemoteInterface {
         storage = s;
     }
 
-    // @Override
+    @Override
     public void backup(String filepath, int replicationDeg) {
         String tempVersion = protocolVersion;
         protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
@@ -125,7 +125,7 @@ public class Peer implements RemoteInterface {
         protocolVersion = tempVersion; // Reset the version
     }
 
-    // @Override
+    @Override
     public void restore(String filepath) {
         File file = new File(filepath);
         String finalFileId = filepath + file.lastModified();
@@ -159,7 +159,7 @@ public class Peer implements RemoteInterface {
         }, 1, TimeUnit.SECONDS);
     }
 
-    // @Override
+    @Override
     public void delete(String pathname) {
         FileManager file = new FileManager(pathname, 0);
 
@@ -176,11 +176,11 @@ public class Peer implements RemoteInterface {
 
         protocolVersion = tempVersion; // Reset the version
 
-        // TODO: erase original file from filesystem ?
+        // erase original file from filesystem
         file.delete();
     }
 
-    // @Override
+    @Override
     public void reclaim(int maxDiskSpace) {
         Storage storage = Peer.getStorage();
 
@@ -210,7 +210,7 @@ public class Peer implements RemoteInterface {
         }, 3, TimeUnit.SECONDS);
     }
 
-    // @Override
+    @Override
     public String state() {
         String buf = "";
         buf += "=================\nFiles Backed up:\n";
@@ -335,7 +335,7 @@ public class Peer implements RemoteInterface {
         }, 1, TimeUnit.SECONDS);
     }
 
-    // @Override
+    @Override
     public void delete_enh(String pathname) {
         // Check if the peer can run the protocol
         if (!protocolVersion.equals("2.0")) { // Se o protocolo do peer não for 2.0, não pode correr enhancements
@@ -358,7 +358,7 @@ public class Peer implements RemoteInterface {
             deleteFirstIteration = false;
         }
         
-        // TODO: erase original file from filesystem ?
+        // erase original file from filesystem
         file.delete();
     }
 }
