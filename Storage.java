@@ -8,7 +8,7 @@ public class Storage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<FileManager> localFiles;
+    private ArrayList<FileManager> localFiles, deletionFiles;
     private ArrayList<Chunk> storedChunks, restoredChunks;
     private ConcurrentHashMap<String, ArrayList<Integer>> replicationHashmap;
     private int availableSpace;
@@ -17,6 +17,7 @@ public class Storage implements Serializable {
         localFiles = new ArrayList<FileManager>();
         storedChunks = new ArrayList<Chunk>();
         restoredChunks = new ArrayList<Chunk>();
+        deletionFiles = new ArrayList<FileManager>();
         replicationHashmap = new ConcurrentHashMap<String, ArrayList<Integer>>();
         availableSpace = 100000000; // 100 MB
     }
@@ -31,6 +32,10 @@ public class Storage implements Serializable {
 
     public ArrayList<Chunk> getRestoredChunks() {
         return restoredChunks;
+    }
+
+    public ArrayList<FileManager> getDeletionFiles() {
+        return deletionFiles;
     }
 
     public synchronized ConcurrentHashMap<String, ArrayList<Integer>> getReplicationHashmap() {
@@ -71,6 +76,25 @@ public class Storage implements Serializable {
         restoredChunks.add(chunk);
     }
 
+	public void addDeletionFile(FileManager file) {
+        for (FileManager fm : deletionFiles) {
+            if (fm.getHashedFileId().equals(file.getHashedFileId())) {
+                return;
+            }
+        }
+        deletionFiles.add(file);
+	}
+
+	public void removeFromDeletionFiles(String fileId) {
+        List<FileManager> foundFiles = new ArrayList<FileManager>();
+        for (FileManager fm : deletionFiles) {
+            if (fm.getHashedFileId().equals(fileId)) {
+                foundFiles.add(fm);
+            }
+        }
+        deletionFiles.removeAll(foundFiles);
+	}
+
     public boolean isFileOwner(String fileId) {
         for (FileManager file : localFiles) {
             if (file.getHashedFileId().equals(fileId)) {
@@ -82,6 +106,24 @@ public class Storage implements Serializable {
 
     public FileManager getLocalFile(String name) {
         for (FileManager fm : localFiles) {
+            if (fm.getHashedFileId().equals(name)) {
+                return fm;
+            }
+        }
+        return null;
+    }
+
+	public FileManager getLocalFileByPathname(String pathname) {
+		for (FileManager fm : localFiles) {
+            if (fm.getPathname().equals(pathname)) {
+                return fm;
+            }
+        }
+        return null;
+	}
+
+    public FileManager getDeletionFile(String name) {
+        for (FileManager fm : deletionFiles) {
             if (fm.getHashedFileId().equals(name)) {
                 return fm;
             }

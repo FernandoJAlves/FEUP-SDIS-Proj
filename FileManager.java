@@ -74,4 +74,16 @@ public class FileManager implements Serializable {
     public int getRepDgr(){
         return repDgr;
     }
+    
+    public void delete() {
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+	public void decreaseRepDgr() {
+        if (repDgr > 0) {
+            repDgr--;
+        }
+	}
 }

@@ -14,7 +14,10 @@ echo "15 - java TestApp peer_1 BACKUP file64k.txt 2;";
 echo "16 - java TestApp peer_1 DELETE file64k.txt;";
 echo "17 - java TestApp peer_1 RESTORE file64k.txt;";
 
-echo "21 - java TestApp peer_1 RESTOREENH penguin.jpg;";
+echo "21 - java TestApp peer_1 RESTOREENH file64k.txt";
+echo "22 - java TestApp peer_1 RESTOREENH penguin.jpg;";
+echo "23 - java TestApp peer_1 DELETEENH file64k.txt;";
+echo "24 - java TestApp peer_1 DELETEENH penguin.jpg;";
 
 echo "0 - Close Options";
 echo Value: ;
@@ -75,8 +78,16 @@ run_j_cmd () {
             java TestApp peer_1 RESTOREENH penguin.jpg
         ;;
         22)
-            echo "java TestApp peer_1 RESTOREENH file64k.jpg"
-            java TestApp peer_1 RESTOREENH file64k.jpg
+            echo "java TestApp peer_1 RESTOREENH file64k.txt"
+            java TestApp peer_1 RESTOREENH file64k.txt
+        ;;
+        23)
+            echo "java TestApp peer_1 DELETEENH file64k.txt"
+            java TestApp peer_1 DELETEENH file64k.txt
+        ;;
+        24)
+            echo "java TestApp peer_1 DELETEENH penguin.jpg"
+            java TestApp peer_1 DELETEENH penguin.jpg
         ;;
         0)
             echo "Leaving..."

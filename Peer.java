@@ -13,11 +13,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 
-/**
- * $ java Peer 1.0 1 peer_1 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083 $ java
- * Peer 1.0 2 peer_2 224.0.0.4 8084 224.0.0.5 8085 224.0.0.6 8086 $ java Peer
- * 1.0 3 peer_3 224.0.0.7 8087 224.0.0.8 8088 224.0.0.9 8089
- */
 public class Peer implements RemoteInterface {
 
     private static ScheduledExecutorService threadpool;
@@ -25,6 +20,8 @@ public class Peer implements RemoteInterface {
     private static Storage storage;
     private static String protocolVersion, accessPoint;
     private static int id;
+
+    private boolean deleteFirstIteration = true;
 
     public Peer(String[] args) {
         parseArguments(args);
@@ -118,8 +115,8 @@ public class Peer implements RemoteInterface {
     // @Override
     public void backup(String filepath, int replicationDeg) {
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
-        
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
+
         FileManager file = new FileManager(filepath, replicationDeg);
         storage.addFile(file);
 
@@ -129,7 +126,7 @@ public class Peer implements RemoteInterface {
                     replicationDeg);
             threadpool.execute(sender);
         }
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
     }
 
     // @Override
@@ -145,14 +142,14 @@ public class Peer implements RemoteInterface {
         }
 
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
 
         for (Chunk chunk : fm.getChunkList()) {
             String message = Message.mes_getchunk(protocolVersion, id, chunk.getFileId(), chunk.getNum());
             MessageSender sender = new MessageSender("MC", message.getBytes());
             threadpool.execute(sender);
         }
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
 
         // aggregate chunks after a second of delay
         threadpool.schedule(new Runnable() {
@@ -171,7 +168,7 @@ public class Peer implements RemoteInterface {
         FileManager file = new FileManager(pathname, 0);
 
         String tempVersion = protocolVersion;
-        protocolVersion = "1.0"; //since it is a vanilla protocol, the version will be 1.0
+        protocolVersion = "1.0"; // since it is a vanilla protocol, the version will be 1.0
 
         for (Chunk chunk : file.getChunkList()) {
             String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
@@ -181,7 +178,10 @@ public class Peer implements RemoteInterface {
             }
         }
 
-        protocolVersion = tempVersion; //Reset the version
+        protocolVersion = tempVersion; // Reset the version
+
+        // TODO: erase original file from filesystem ?
+        file.delete();
     }
 
     // @Override
@@ -196,7 +196,9 @@ public class Peer implements RemoteInterface {
             // remove chunk from stored chunks
             storage.removeChunk(index);
             // send removed message
-            String message = Message.mes_removed("1.0", Peer.getId(), fileId, chunkNum); //Since this is a vanilla protocol, the version will always be 1.0
+            String message = Message.mes_removed("1.0", Peer.getId(), fileId, chunkNum); // Since this is a vanilla
+                                                                                         // protocol, the version will
+                                                                                         // always be 1.0
             MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
             threadpool.execute(sender);
         }
@@ -339,40 +341,22 @@ public class Peer implements RemoteInterface {
             return;
         }
 
+        Storage storage = Peer.getStorage();
 
-        //PARTE ENHANCEMENT - Logica
-
-        /*
-        
-         - Dar push a cada chunk a uma estrutura de dados no storage, que guarda o chunk e os peers que guardaram o chunk
-            (alternativa, usar a mesma estrutura de dados que já temos, mas não dar clear quando recebe um DELETE 2.0)
-         
-         - Se for a primeira execução cria uma instancia de MessageDeleteCycle (com scheduledwithfixedrate) 
-            que manda mensagem delete a todos os chunks na estrutura de dados que falei de X em X segundos
-            (talvez crie logo que o peer começa como os channels, caso fazer só primeiro caso seja complicado)
-         
-         - Delete vai passar a ter uma resposta, e por cada resposta dessas que um peer receber, remove o valor do
-            peer que enviou resposta na tal estrutura. Se chegar a 0 (o array list fica vazio), tira-se da estrutura.
-         
-         - A tal resposta só surgirá no caso de realmente ainda tiver o chunk por apagar, se não tiver não manda
-            (tem o problema de se a resposta falhar fica lá infinitamente a mandar o delete, mas para simplificar acho melhor fazer assim)
-
-        */
-
-
-/*
-        FileManager file = new FileManager(pathname, 0);
-
-        for (Chunk chunk : file.getChunkList()) {
-            String message = Message.mes_delete(protocolVersion, id, chunk.getFileId());
-            for (int i = 0; i < 5; i++) { // Sends delete 5 times, once every second
-                MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
-                threadpool.schedule(sender, i, TimeUnit.SECONDS);
-            }
+        FileManager file = storage.getLocalFileByPathname(pathname);
+        if (file == null) {
+            System.out.println("Error: file has not been backed up!");
+            return;
         }
-        */
+        storage.addDeletionFile(file);
 
-
+        if (deleteFirstIteration) {
+            MessageDeleteCycle sender = new MessageDeleteCycle();
+            threadpool.scheduleAtFixedRate(sender, 0, 10, TimeUnit.SECONDS);
+            deleteFirstIteration = false;
+        }
+        
+        // TODO: erase original file from filesystem ?
+        file.delete();
     }
-
 }

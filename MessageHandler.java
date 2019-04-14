@@ -17,16 +17,15 @@ public class MessageHandler implements Runnable {
 
     public MessageHandler(byte[] message, int msg_size) {
         // header extraction
-        String headerStr = Utils.getHeader(message,msg_size);
+        String headerStr = Utils.getHeader(message, msg_size);
         this.args = Utils.makeArrayArgs(headerStr);
 
         // body extraction
-        byte[] body = Utils.getBody(message,msg_size);
+        byte[] body = Utils.getBody(message, msg_size);
         if (body != null) {
             this.body = body;
-        }
-        else{
-            this.body = new byte[0]; //Case of last chunk being size 0
+        } else {
+            this.body = new byte[0]; // Case of last chunk being size 0
         }
 
         this.scheduledPutchunks = new HashMap<String, ScheduledFuture<?>>();
@@ -55,6 +54,9 @@ public class MessageHandler implements Runnable {
             return;
         case "REMOVED":
             handleRemoved();
+            return;
+        case "DELETED":
+            handleDeleted();
             return;
         default:
             System.out.println("Error: Entered MessageHandler Switch Default");
@@ -127,17 +129,16 @@ public class MessageHandler implements Runnable {
         byte[] message = Message.getChunkMessage(chunk);
         System.out.println("The chunk size = " + chunk.getData().length);
 
-        String runningVer; //Version of the protocol that will be run
+        String runningVer; // Version of the protocol that will be run
 
-        if(senderVersion.equals(Peer.getVersion())){ //Same version
-            //System.out.println("Same Version");
+        if (senderVersion.equals(Peer.getVersion())) { // Same version
+            // System.out.println("Same Version");
             runningVer = senderVersion;
-        }
-        else if(senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")){ //Diff version but sender is vanilla
-            //System.out.println("Diff Version but works");
+        } else if (senderVersion.equals("1.0") && Peer.getVersion().equals("2.0")) { // Diff version but sender is
+                                                                                     // vanilla
+            // System.out.println("Diff Version but works");
             runningVer = senderVersion;
-        }
-        else{
+        } else {
             System.out.println("Error: Request's Version is greater than the Receiver's Version");
             return;
         }
@@ -163,9 +164,9 @@ public class MessageHandler implements Runnable {
                 // close connection
                 out.close();
                 socket.close();
-            } catch(ConnectException e) {
+            } catch (ConnectException e) {
                 System.out.println("Could not connect!");
-            } catch(SocketException e) {
+            } catch (SocketException e) {
                 System.out.println("Could not connect to socket!");
             } catch (UnknownHostException e1) {
                 // TODO Auto-generated catch b lock
@@ -177,7 +178,7 @@ public class MessageHandler implements Runnable {
             break;
         default:
             break;
-        }        
+        }
     }
 
     private void handleChunk() {
@@ -190,7 +191,7 @@ public class MessageHandler implements Runnable {
         Chunk chunk = new Chunk(fileId, chunkNum, body, 0);
 
         Storage storage = Peer.getStorage();
-        storage.addRestoredChunk(chunk);   
+        storage.addRestoredChunk(chunk);
     }
 
     private void handleDelete() {
@@ -200,7 +201,14 @@ public class MessageHandler implements Runnable {
         String fileId = args[3];
 
         Storage storage = Peer.getStorage();
+
+        // delete all chunks
         storage.deleteChunks(fileId);
+
+        // TODO: se versão for 2.0 corre esta parte para mandar mensagem deleted
+        String message = Message.mes_deleted("2.0", Peer.getId(), fileId);
+        MessageSender sender = new MessageSender("MC", message.getBytes()); // send message through MC
+        Peer.getThreadPool().execute(sender);
     }
 
     private void handleRemoved() {
@@ -226,10 +234,26 @@ public class MessageHandler implements Runnable {
         // if replication dgr dropped below desired, initiate putchunk protocol
         if (storage.getChunkRepDgr(chunkName) < chunk.getDesiredRepDgr()) {
             byte[] message = Message.getPutchunkMessage(chunk);
-            MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(), chunk.getDesiredRepDgr());
+            MessageSenderPutChunk sender = new MessageSenderPutChunk("MDB", message, chunk.getFileId(), chunk.getNum(),
+                    chunk.getDesiredRepDgr());
             int delay = ThreadLocalRandom.current().nextInt(0, 400 + 1); // random delay between 0 and 400ms
             ScheduledFuture<?> putchunkTask = Peer.getThreadPool().schedule(sender, delay, TimeUnit.MILLISECONDS);
             scheduledPutchunks.put(chunkName, putchunkTask);
+        }
+    }
+
+    private void handleDeleted() {
+        System.out.println("Received Deleted!");
+
+        // arguments
+        String fileId = args[3];
+
+        Storage storage = Peer.getStorage();
+        storage.getDeletionFile(fileId).decreaseRepDgr();
+
+        int peersHavingFile = storage.getDeletionFile(fileId).getRepDgr();
+        if (peersHavingFile == 0) {
+            storage.removeFromDeletionFiles(fileId);
         }
     }
 }

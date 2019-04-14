@@ -185,6 +185,19 @@ public class Message {
         return "REMOVED " + finalVersion + " " + senderId + " " + fileId + " " + chunkNo + " \r\n\r\n";
     }
 
+    // DELETED <Version> <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+    public static String mes_deleted(String version, int senderId, String fileId) {
+
+        String finalVersion;
+        if (Character.isDigit(version.charAt(0)) & Character.isDigit(version.charAt(2)) & version.charAt(1) == '.') {
+            finalVersion = version;
+        } else {
+            return "ERROR";
+        }
+
+        return "DELETED " + finalVersion + " " + senderId + " " + fileId + " \r\n\r\n";
+    }
+
     public static byte[] getPutchunkMessage(Chunk chunk) {
         String header = mes_putchunk(Peer.getVersion(), Peer.getId(), chunk.getFileId(), chunk.getNum(), chunk.getDesiredRepDgr()); 
         return mes_addBody(header, chunk.getData());

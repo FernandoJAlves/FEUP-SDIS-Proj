@@ -6,7 +6,7 @@ public class TestApp {
     }
 
     public enum ProtocolList {
-        BACKUP, RESTORE, DELETE, RECLAIM, STATE, RESTOREENH
+        BACKUP, RESTORE, DELETE, RECLAIM, STATE, RESTOREENH, DELETEENH
     }
 
     public static boolean containsProtocol(String test) {

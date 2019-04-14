@@ -6,7 +6,7 @@ timeout=300; # Time before the tabs close
 gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); java Peer 2.0 1 peer_1 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'
 gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); java Peer 2.0 2 peer_2 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'
 gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); java Peer 2.0 3 peer_3 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'
-gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); sleep 20s; java Peer 1.0 4 peer_4 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'
+# gnome-terminal -x sh -c '((sleep \'$timeout' && kill -9 $$)&); sleep 20s; java Peer 1.0 4 peer_4 224.0.0.1 8081 224.0.0.2 8082 224.0.0.3 8083; exec bash'
 
 # TestApp
 #gnome-terminal -x sh -c 'java TestApp localhost peer_1 STATE; exec bash'

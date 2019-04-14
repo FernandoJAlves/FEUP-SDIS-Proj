@@ -76,6 +76,12 @@ public class Utils {
         Predicate<Chunk> byName = chunk -> chunk.getFileId().equals(hashedFileId);
         List<Chunk> fileChunks = restoredChunks.stream().filter(byName).collect(Collectors.<Chunk>toList());
 
+        List<Chunk> original = storage.getLocalFile(hashedFileId).getChunkList();
+        if (fileChunks.size() < original.size()) {
+            System.out.println("Error: could not restore all file chunks");
+            return;
+        }
+
         Collections.sort(fileChunks, new Comparator<Chunk>() {
             public int compare(Chunk c1, Chunk c2) {
                 return c1.getNum() - c2.getNum();
